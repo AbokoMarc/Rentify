@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: rentify
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: frankfurt
+    healthCheckPath: /api/rooms
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_NAME
+        value: Administrateur Rentify
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false
+      - key: CAMPAY_MODE
+        value: demo
+      - key: CAMPAY_PERMANENT_TOKEN
+        sync: false
+      - key: WHATSAPP_ADMIN_NUMBER
+        sync: false
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_CONTACT_EMAIL
+        value: admin@rentify.cm
+# Base de données : Turso (SQLite hébergé, plan gratuit persistant). Voir README → section Turso
+# pour créer la base et récupérer TURSO_DATABASE_URL / TURSO_AUTH_TOKEN avant le premier déploiement.
+# Paiements : Mobile Money automatique via CamPay (MTN + Orange), passe CAMPAY_MODE à "live" une fois
+# testé. Le wallet crypto manuel reste dispo en option (adresse configurée dans l'admin, pas ici).

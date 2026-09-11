@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explorer les logements — Rentify</title>
+<link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0E5C63">
+<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  .city-pills { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 4px; }
+  .city-pill { border: 1.5px solid var(--line); background: white; border-radius: 999px; padding: 7px 16px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink-text); }
+  .city-pill.active { background: var(--ink); border-color: var(--ink); color: white; }
+  .view-toggle { display: flex; gap: 6px; background: var(--sand-deep); border-radius: 999px; padding: 4px; }
+  .view-toggle button { border: none; background: transparent; padding: 6px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--muted-text); }
+  .view-toggle button.active { background: white; color: var(--ink-text); box-shadow: var(--shadow-card); }
+  #map-view { height: 520px; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-card); margin-bottom: 40px; }
+  .leaflet-popup-content { font-family: var(--font-body); }
+  .map-popup-title { font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+  .map-popup-price { color: var(--ink); font-weight: 700; font-size: 13px; }
+  .map-popup-link { display: block; margin-top: 6px; font-size: 12px; color: var(--ink); font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="app-header"></div>
+
+<section style="background:var(--ink);color:white;padding:36px 0">
+  <div class="container">
+    <h1 style="color:white;font-size:26px" id="search-title">Tous les logements</h1>
+    <p style="color:rgba(255,255,255,0.75);margin-top:6px" id="search-subtitle">Chargement des résultats…</p>
+  </div>
+</section>
+
+<div class="container" style="padding-top:28px">
+  <div class="city-pills" id="city-pills"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin:6px 0 14px">
+    <div id="near-me-status" style="font-size:13px;color:var(--muted-text)"></div>
+    <div class="view-toggle" id="view-toggle">
+      <button data-view="list" class="active">☰ Liste</button>
+      <button data-view="map">🗺️ Carte</button>
+    </div>
+  </div>
+  <div class="filters-bar" id="filters-bar">
+    <button class="filter-pill" data-type="" data-i18n="all_types">Tous types</button>
+    <button class="filter-pill" data-type="maison" data-i18n="cat_houses">Maisons</button>
+    <button class="filter-pill" data-type="appartement" data-i18n="cat_apartments">Appartements</button>
+    <button class="filter-pill" data-type="chambre" data-i18n="cat_rooms">Chambres</button>
+    <span style="width:1px;height:24px;background:var(--line);margin:0 4px"></span>
+    <select id="f-country" style="border:1.5px solid var(--line);border-radius:999px;padding:8px 16px;font-size:14px"><option value="">Tous les pays</option></select>
+    <input type="text" id="f-city" placeholder="Ville" data-i18n-placeholder="ph_city" style="border:1.5px solid var(--line);border-radius:999px;padding:8px 16px;font-size:14px;width:140px">
+    <input type="number" id="f-min" placeholder="Prix min (FCFA)" data-i18n-placeholder="ph_price_min" style="border:1.5px solid var(--line);border-radius:999px;padding:8px 16px;font-size:14px;width:130px">
+    <input type="number" id="f-max" placeholder="Prix max (FCFA)" data-i18n-placeholder="ph_price_max" style="border:1.5px solid var(--line);border-radius:999px;padding:8px 16px;font-size:14px;width:130px">
+    <select id="f-adults" style="border:1.5px solid var(--line);border-radius:999px;padding:8px 16px;font-size:14px">
+      <option value="">Voyageurs</option>
+      <option value="1">1 adulte</option>
+      <option value="2">2 adultes</option>
+      <option value="4">4 adultes</option>
+      <option value="6">6+ adultes</option>
+    </select>
+    <button class="btn btn-dark btn-sm" id="apply-filters" data-i18n="filter_btn">Filtrer</button>
+    <button class="btn btn-outline-ink btn-sm" id="near-me-btn" data-i18n="nearby">📍 Près de moi</button>
+  </div>
+  <div id="map-view" class="hidden"></div>
+
+  <div class="grid grid-3" id="results-grid" style="padding-bottom:60px">
+    <div class="skeleton" style="height:320px"></div>
+    <div class="skeleton" style="height:320px"></div>
+    <div class="skeleton" style="height:320px"></div>
+  </div>
+</div>
+
+<div id="app-footer"></div>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/i18n.js"></script>
+<script src="/assets/js/theme.js"></script>
+<script src="/assets/js/calculators.js"></script>
+<script src="/assets/js/cookies.js"></script>
+<script src="/assets/js/layout.js"></script>
+<script src="/assets/js/notifications.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="/assets/js/search.js"></script>
+</body>
+</html>

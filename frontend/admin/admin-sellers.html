@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vendeurs — Admin Rentify</title>
+<link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0E5C63">
+<link rel="stylesheet" href="/assets/css/style.css">
+<style>
+  table { width: 100%; border-collapse: collapse; background: white; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-card); }
+  th, td { text-align: left; padding: 12px 16px; font-size: 14px; border-bottom: 1px solid var(--line); }
+  th { background: var(--sand-deep); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted-text); }
+  tr:last-child td { border-bottom: none; }
+</style>
+</head>
+<body>
+<div id="app-header"></div>
+<div class="container" style="padding:32px 24px 60px">
+  <h1 style="font-size:26px;margin-bottom:6px">Vendeurs à valider</h1>
+  <p style="color:var(--muted-text);margin-bottom:24px">Un compte doit être validé ici avant que la personne puisse proposer des annonces. Chaque annonce qu'elle soumet ensuite reste, elle, à valider séparément dans "Logements".</p>
+
+  <div style="overflow-x:auto">
+    <table class="responsive-table">
+      <thead><tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>Ville</th><th>Demande le</th><th>Actions</th></tr></thead>
+      <tbody id="sellers-tbody"><tr><td colspan="6" style="padding:30px;text-align:center;color:var(--muted-text)">Chargement…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/i18n.js"></script>
+<script src="/assets/js/theme.js"></script>
+<script src="/assets/js/payment-icons.js"></script>
+<script src="/assets/js/layout.js"></script>
+<script src="/assets/js/notifications.js"></script>
+<script>
+mountAdminLayout('sellers');
+
+async function loadSellers() {
+  try {
+    const { sellers } = await api('/admin/sellers/pending');
+    qs('sellers-tbody').innerHTML = sellers.length ? sellers.map(s => `
+      <tr data-id="${s.id}">
+        <td data-label="Nom"><strong>${escapeHtml(s.name)}</strong></td>
+        <td data-label="Email">${escapeHtml(s.email)}</td>
+        <td data-label="Téléphone">${escapeHtml(s.phone || '—')}</td>
+        <td data-label="Ville">${escapeHtml(s.city || '—')}</td>
+        <td data-label="Demande le">${formatDate(s.created_at)}</td>
+        <td class="row-actions">
+          <button class="btn btn-primary btn-sm" data-approve="${s.id}">✓ Valider</button>
+          <button class="btn btn-danger btn-sm" data-reject="${s.id}">✕ Refuser</button>
+        </td>
+      </tr>`).join('') : `<tr><td colspan="6" style="padding:30px;text-align:center;color:var(--muted-text)">Aucune demande en attente 🎉</td></tr>`;
+  } catch (err) {
+    qs('sellers-tbody').innerHTML = `<tr><td colspan="6" style="padding:20px;color:var(--clay)">${escapeHtml(err.message)}</td></tr>`;
+  }
+}
+
+qs('sellers-tbody').addEventListener('click', async (e) => {
+  const approveId = e.target.dataset.approve;
+  const rejectId = e.target.dataset.reject;
+  if (approveId) {
+    try { await api(`/admin/sellers/${approveId}/approve`, { method: 'PUT' }); showToast('Vendeur validé', 'Il peut maintenant proposer des annonces.', 'success'); loadSellers(); }
+    catch (err) { showToast('Erreur', err.message, 'warn'); }
+  }
+  if (rejectId) {
+    if (!confirm('Refuser cette demande vendeur ?')) return;
+    try { await api(`/admin/sellers/${rejectId}/reject`, { method: 'PUT' }); showToast('Demande refusée', '', 'success'); loadSellers(); }
+    catch (err) { showToast('Erreur', err.message, 'warn'); }
+  }
+});
+
+loadSellers();
+</script>
+</body>
+</html>

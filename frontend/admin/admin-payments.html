@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paiements — Admin Rentify</title>
+<link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0E5C63">
+<link rel="stylesheet" href="/assets/css/style.css">
+<style>
+  table { width: 100%; border-collapse: collapse; background: white; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-card); }
+  th, td { text-align: left; padding: 12px 16px; font-size: 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--sand-deep); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted-text); }
+  tr:last-child td { border-bottom: none; }
+  .settings-card { background: white; border-radius: var(--radius-md); box-shadow: var(--shadow-card); padding: 22px; max-width: 520px; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+<div id="app-header"></div>
+<div class="container" style="padding:32px 24px 60px">
+  <h1 style="font-size:26px;margin-bottom:6px">Paiements</h1>
+  <p style="color:var(--muted-text);margin-bottom:24px">Mobile Money (MTN/Orange) automatique via CamPay, et un wallet crypto manuel en option discrète — à vérifier ci-dessous.</p>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="pending">À vérifier</button>
+    <button class="tab-btn" data-tab="all">Tous les paiements</button>
+    <button class="tab-btn" data-tab="wallet">Wallet crypto</button>
+  </div>
+
+  <div id="tab-pending">
+    <div style="overflow-x:auto">
+      <table class="responsive-table">
+        <thead><tr><th>Réservation</th><th>Client</th><th>Méthode</th><th>Montant</th><th>Référence</th><th>Actions</th></tr></thead>
+        <tbody id="pending-tbody"><tr><td colspan="6" style="padding:30px;text-align:center;color:var(--muted-text)">Chargement…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-all" class="hidden">
+    <div style="overflow-x:auto">
+      <table class="responsive-table">
+        <thead><tr><th>Réservation</th><th>Client</th><th>Méthode</th><th>Montant</th><th>Statut</th><th>Date</th></tr></thead>
+        <tbody id="all-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-wallet" class="hidden">
+    <div class="settings-card">
+      <h3 style="font-size:16px;margin-bottom:4px">Wallet crypto</h3>
+      <p style="color:var(--muted-text);font-size:13px;margin-bottom:18px">C'est l'option crypto manuelle, en plus du Mobile Money automatique. Le client envoie les fonds ici et colle le hash de transaction ; à toi de vérifier et valider dans "À vérifier".</p>
+      <form id="wallet-form">
+        <div class="field"><label>Adresse wallet</label><input type="text" id="wallet-address" placeholder="Ex : bc1q... ou 0x..."></div>
+        <div class="field"><label>Note sur le réseau (affichée au client)</label><input type="text" id="wallet-note" placeholder="Ex : USDC sur le réseau Base uniquement"></div>
+        <button type="submit" class="btn btn-dark">Enregistrer</button>
+      </form>
+    </div>
+  </div>
+</div>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/i18n.js"></script>
+<script src="/assets/js/theme.js"></script>
+<script src="/assets/js/payment-icons.js"></script>
+<script src="/assets/js/layout.js"></script>
+<script src="/assets/js/notifications.js"></script>
+<script src="/assets/js/admin-payments.js"></script>
+</body>
+</html>

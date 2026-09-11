@@ -1,0 +1,16 @@
+{
+  "name": "rentify-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20.6.0" },
+  "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "web-push": "^3.6.7"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node seed.js",
+    "dev": "node --watch server.js"
+  }
+}

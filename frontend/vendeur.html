@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Espace vendeur — Rentify</title>
+<link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0E5C63">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div id="app-header"></div>
+
+<div class="container" style="padding:32px 24px 60px;max-width:920px">
+
+  <div id="seller-guest" class="hidden" style="text-align:center;padding:60px 20px">
+    <h1 style="font-size:26px;margin-bottom:10px">Deviens vendeur sur Rentify</h1>
+    <p style="color:var(--muted-text);max-width:480px;margin:0 auto 24px">Connecte-toi ou crée un compte pour proposer tes chambres, appartements, maisons ou terrains.</p>
+    <div style="display:flex;gap:12px;justify-content:center">
+      <a href="/login.html" class="btn btn-ghost">Se connecter</a>
+      <a href="/signup.html" class="btn btn-dark">Créer un compte</a>
+    </div>
+  </div>
+
+  <div id="seller-become" class="hidden" style="text-align:center;padding:60px 20px">
+    <h1 style="font-size:26px;margin-bottom:10px">Deviens vendeur sur Rentify</h1>
+    <p style="color:var(--muted-text);max-width:480px;margin:0 auto 24px">Propose tes logements à la location ou en vente. Chaque annonce est vérifiée par notre équipe avant d'être publiée, pour la confiance des clients.</p>
+    <button class="btn btn-dark" id="become-seller-btn">Devenir vendeur</button>
+    <div id="become-seller-error" style="color:var(--clay);font-size:13px;margin-top:14px;display:none"></div>
+  </div>
+
+  <div id="seller-pending" class="hidden" style="text-align:center;padding:60px 20px">
+    <div style="font-size:40px;margin-bottom:10px">⏳</div>
+    <h1 style="font-size:24px;margin-bottom:10px" data-i18n="seller_pending_title">Compte vendeur en attente</h1>
+    <p style="color:var(--muted-text);max-width:480px;margin:0 auto" data-i18n="seller_pending_msg">Ton compte vendeur est en cours de validation par l'admin. Tu pourras publier des annonces dès qu'il l'aura validé.</p>
+  </div>
+
+  <div id="seller-dashboard" class="hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <div><h1 style="font-size:26px">Mes annonces</h1><p style="color:var(--muted-text);margin-top:4px">Chaque nouvelle annonce (ou modification) est revue par l'admin avant publication.</p></div>
+      <button class="btn btn-primary" id="new-listing-btn">+ Proposer une annonce</button>
+    </div>
+    <div id="listings-grid" class="grid" style="grid-template-columns:1fr;gap:14px">
+      <div class="skeleton" style="height:100px"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="overlay hidden" id="listing-modal-overlay">
+  <div class="modal modal-lg">
+    <button class="modal-close" id="listing-modal-close">✕</button>
+    <h2 id="listing-modal-title">Proposer une annonce</h2>
+    <p class="modal-sub">Sois précis et honnête : ton annonce sera vérifiée avant publication.</p>
+    <form id="listing-form">
+      <input type="hidden" id="lm-id">
+      <div class="field"><label>Titre</label><input type="text" id="lm-title" required placeholder="Ex : Studio meublé à Bonapriso"></div>
+      <div class="field-row">
+        <div class="field"><label>Type</label>
+          <select id="lm-type"><option value="chambre">Chambre</option><option value="studio">Studio</option><option value="appartement">Appartement</option><option value="maison">Maison</option><option value="terrain">Terrain</option></select>
+        </div>
+        <div class="field"><label>Ville</label><input type="text" id="lm-city" required placeholder="Ex : Douala"></div>
+      </div>
+      <div class="field"><label>Quartier / Adresse</label><input type="text" id="lm-address" placeholder="Ex : Bonapriso, non loin du carrefour..."></div>
+      <div class="field-row">
+        <div class="field"><label>Latitude (pour apparaître sur la carte)</label><input type="number" step="any" id="lm-lat" placeholder="Ex : 3.8480"></div>
+        <div class="field"><label>Longitude</label><input type="number" step="any" id="lm-lng" placeholder="Ex : 11.5021"></div>
+      </div>
+      <p style="font-size:12px;color:var(--muted-text);margin-top:-8px;margin-bottom:14px">Astuce : cherche l'adresse sur Google Maps, clic droit sur le point exact → les coordonnées s'affichent en premier dans le menu.</p>
+      <div class="field"><label>Description</label><textarea id="lm-desc" rows="3" placeholder="Décris le logement, ses atouts, les charges éventuelles..."></textarea></div>
+      <div class="field-row">
+        <div class="field"><label>Prix / nuit (FCFA)</label><input type="number" id="lm-price" required placeholder="Ex : 15000"></div>
+        <div class="field"><label>Adultes max</label><input type="number" id="lm-adults" value="2"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Chambres</label><input type="number" id="lm-bedrooms" value="1"></div>
+        <div class="field"><label>Salles de bain</label><input type="number" id="lm-bathrooms" value="1"></div>
+      </div>
+      <div class="field"><label>Équipements (séparés par des virgules)</label><input type="text" id="lm-amenities" placeholder="Wifi, Climatisation, Groupe électrogène, Parking"></div>
+      <div class="field"><label>URLs des photos (une par ligne)</label><textarea id="lm-images" rows="3" placeholder="https://..."></textarea></div>
+      <div id="listing-form-error" style="color:var(--clay);font-size:13px;margin-bottom:10px;display:none"></div>
+      <button type="submit" class="btn btn-primary btn-block" id="listing-form-submit">Soumettre à validation</button>
+    </form>
+  </div>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/i18n.js"></script>
+<script src="/assets/js/theme.js"></script>
+<script src="/assets/js/payment-icons.js"></script>
+<script src="/assets/js/layout.js"></script>
+<script src="/assets/js/notifications.js"></script>
+<script src="/assets/js/vendeur.js"></script>
+</body>
+</html>
