@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://REMPLACER-PAR-TON-URL-RENDER.onrender.com/api/:path*"
+      "destination": "https://rentify-6yiw.onrender.com/api/:path*"
     }
   ]
 }
