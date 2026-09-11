@@ -1,10 +1,13 @@
 {
-  "buildCommand": null,
-  "outputDirectory": "rentify/frontend",
+  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/api/:path*",
       "destination": "https://onrender.com*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/frontend/$1"
     }
   ]
 }
