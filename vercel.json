@@ -6,8 +6,16 @@
       "destination": "https://onrender.com*"
     },
     {
-      "source": "/(.*)",
-      "destination": "/frontend/$1"
+      "source": "/admin/:path*",
+      "destination": "/frontend/admin/:path*"
+    },
+    {
+      "source": "/assets/:path*",
+      "destination": "/frontend/assets/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/frontend/:path*"
     }
   ]
 }
