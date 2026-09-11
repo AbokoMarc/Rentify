@@ -1,10 +1,10 @@
 {
   "buildCommand": null,
-  "outputDirectory": "frontend",
+  "outputDirectory": "rentify/frontend",
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://rentify-6yiw.onrender.com/api/:path*"
+      "destination": "https://onrender.com*"
     }
   ]
 }
