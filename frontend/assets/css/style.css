@@ -1,25 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --ink: #0E5C63;
-  --ink-deep: #0A3E44;
-  --ink-light: #1A7A82;
-  --gold: #E3A23C;
-  --gold-deep: #C6852A;
-  --sand: #FBF8F2;
-  --sand-deep: #F1EAD9;
-  --forest: #1F7A52;
-  --clay: #D2542E;
+  /* Identité Rentify : terre cuite + espresso + ocre — chaud, ancré, à l'opposé du bleu/teal
+     "startup tech" générique. Inspiré des terres et bois du Cameroun, sans jamais toucher
+     aux couleurs du drapeau. */
+  --ink: #241A12;
+  --ink-deep: #140D08;
+  --ink-light: #4A3624;
+  --gold: #C9781E;
+  --gold-deep: #A45F12;
+  --sand: #FBF3E6;
+  --sand-deep: #F1E3CC;
+  --forest: #5C7A4A;
+  --clay: #B84A2A;
   --white: #FFFFFF;
-  --ink-text: #1A2733;
-  --muted-text: #5B6B78;
-  --line: #E4DFD3;
-  --line-strong: #CFC7B4;
+  --ink-text: #241A12;
+  --muted-text: #7A6A57;
+  --line: #E9DCC4;
+  --line-strong: #D8C6A4;
   --radius-sm: 8px;
   --radius-md: 14px;
-  --radius-lg: 22px;
-  --shadow-card: 0 1px 2px rgba(14,92,99,0.08), 0 8px 24px rgba(14,92,99,0.10);
-  --shadow-pop: 0 12px 40px rgba(10,62,68,0.20);
+  --radius-lg: 26px;
+  --shadow-card: 0 1px 2px rgba(36,26,18,0.06), 0 10px 28px rgba(36,26,18,0.10);
+  --shadow-pop: 0 16px 46px rgba(20,13,8,0.24);
   --font-display: 'Fraunces', serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -50,22 +53,22 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; margin: 0; 
 /* ---------- Boutons ---------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 12px 22px; border-radius: 999px; border: 1.5px solid transparent;
-  font-weight: 600; font-size: 15px; transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+  padding: 12px 22px; border-radius: 10px; border: 1.5px solid transparent;
+  font-weight: 700; font-size: 15px; transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
   white-space: nowrap;
 }
 .btn:active { transform: scale(0.97); }
-.btn-primary { background: var(--gold); color: var(--ink-deep); }
+.btn-primary { background: var(--gold); color: var(--white); }
 .btn-primary:hover { background: var(--gold-deep); }
 .btn-dark { background: var(--ink); color: var(--white); }
 .btn-dark:hover { background: var(--ink-deep); }
 .btn-outline { background: transparent; border-color: var(--white); color: var(--white); }
 .btn-outline:hover { background: rgba(255,255,255,0.12); }
 .btn-outline-ink { background: transparent; border-color: var(--ink); color: var(--ink); }
-.btn-outline-ink:hover { background: rgba(15,53,86,0.06); }
+.btn-outline-ink:hover { background: rgba(36,26,18,0.06); }
 .btn-ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); }
 .btn-ghost:hover { background: var(--sand-deep); }
-.btn-danger { background: #FBEAE4; color: var(--clay); }
+.btn-danger { background: #F7E2D8; color: var(--clay); }
 .btn-block { width: 100%; }
 .btn-sm { padding: 8px 16px; font-size: 13px; }
 
@@ -84,7 +87,9 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; margin: 0; 
 .badge-approved { background: #E4F3EC; color: var(--forest); }
 .badge-rejected { background: #FBE4DE; color: var(--clay); }
 .main-nav { display: flex; align-items: center; gap: 28px; font-weight: 500; font-size: 15px; color: var(--ink-text); }
+.main-nav a { position: relative; padding-bottom: 4px; }
 .main-nav a:hover { color: var(--ink); }
+.main-nav a[style*="font-weight:700"]::after { content: ''; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: var(--gold); border-radius: 2px; }
 .header-actions { display: flex; align-items: center; gap: 14px; }
 
 .icon-btn {
@@ -115,23 +120,24 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; margin: 0; 
 
 /* ---------- Hero ---------- */
 .hero {
-  background: linear-gradient(155deg, var(--ink) 0%, var(--ink-deep) 65%, #082E33 100%);
-  color: white; padding: 64px 0 150px; position: relative; overflow: hidden;
+  background: linear-gradient(155deg, var(--ink) 0%, var(--ink-deep) 70%, #0C0805 100%);
+  color: white; padding: 64px 0 190px; position: relative; overflow: hidden;
+  clip-path: polygon(0 0, 100% 0, 100% 88%, 0 100%);
 }
 .hero::after {
   content: ''; position: absolute; right: -80px; top: -80px; width: 420px; height: 420px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(227,162,60,0.20), transparent 70%);
+  background: radial-gradient(circle, rgba(201,120,30,0.22), transparent 70%);
 }
 .hero::before {
-  content: ''; position: absolute; left: -120px; bottom: -140px; width: 380px; height: 380px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(210,84,46,0.16), transparent 70%);
+  content: ''; position: absolute; left: -120px; bottom: -80px; width: 380px; height: 380px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(184,74,42,0.18), transparent 70%);
 }
 .hero h1 { color: white; font-size: 44px; line-height: 1.15; max-width: 640px; }
 .hero p.lead { font-size: 18px; color: rgba(255,255,255,0.82); margin-top: 14px; margin-bottom: 60px; max-width: 560px; }
 
 .search-card {
   background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-pop);
-  padding: 22px; margin-top: -84px; position: relative; z-index: 10;
+  padding: 22px; margin-top: -124px; position: relative; z-index: 10;
   display: grid; grid-template-columns: 1.3fr 1.3fr 1fr auto; gap: 0;
 }
 .search-field {
@@ -159,7 +165,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; margin: 0; 
 .category-card { position: relative; border-radius: var(--radius-md); overflow: hidden; aspect-ratio: 4/5; }
 .category-card img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease; }
 .category-card:hover img { transform: scale(1.06); }
-.category-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,37,64,0) 40%, rgba(10,37,64,0.85) 100%); }
+.category-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,13,8,0) 40%, rgba(20,13,8,0.85) 100%); }
 .category-card .cc-label { position: absolute; left: 18px; bottom: 18px; right: 18px; color: white; z-index: 2; }
 .category-card .cc-label h3 { color: white; font-size: 20px; }
 .category-card .cc-label p { font-size: 13px; color: rgba(255,255,255,0.82); margin: 4px 0 0; }
@@ -174,13 +180,14 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; margin: 0; 
 .city-card p { color: var(--muted-text); font-size: 13px; margin: 4px 0 0; }
 
 /* ---------- Room cards ---------- */
-.room-card { background: white; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-card); display: flex; flex-direction: column; }
+.room-card { background: white; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-card); display: flex; flex-direction: column; position: relative; }
+.room-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--gold), var(--clay)); z-index: 2; }
 .room-card .room-img-wrap { position: relative; aspect-ratio: 4/3; overflow: hidden; }
 .room-card .room-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease; }
 .room-card:hover .room-img-wrap img { transform: scale(1.07); }
 .fav-btn {
   position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border-radius: 50%;
-  background: rgba(10,37,64,0.45); backdrop-filter: blur(2px); color: white; border: none;
+  background: rgba(20,13,8,0.55); backdrop-filter: blur(2px); color: white; border: none;
   display: flex; align-items: center; justify-content: center; font-size: 16px;
 }
 .fav-btn.active { color: var(--clay); }

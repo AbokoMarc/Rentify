@@ -9,7 +9,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#0E5C63">
+<meta name="theme-color" content="#241A12">
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
@@ -63,7 +63,9 @@
         <div class="field"><label>Type</label>
           <select id="lm-type"><option value="chambre">Chambre</option><option value="studio">Studio</option><option value="appartement">Appartement</option><option value="maison">Maison</option><option value="terrain">Terrain</option></select>
         </div>
-        <div class="field"><label>Ville</label><input type="text" id="lm-city" required placeholder="Ex : Douala"></div>
+        <div class="field"><label>Ville</label><input type="text" id="lm-city" list="cm-cities" required placeholder="Ex : Douala">
+          <datalist id="cm-cities"><option value="Yaoundé"><option value="Douala"><option value="Kribi"><option value="Buea"><option value="Limbe"><option value="Bafoussam"><option value="Bamenda"><option value="Garoua"><option value="Maroua"><option value="Ngaoundéré"></datalist>
+        </div>
       </div>
       <div class="field"><label>Quartier / Adresse</label><input type="text" id="lm-address" placeholder="Ex : Bonapriso, non loin du carrefour..."></div>
       <div class="field-row">

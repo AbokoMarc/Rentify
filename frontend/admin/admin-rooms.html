@@ -9,7 +9,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#0E5C63">
+<meta name="theme-color" content="#241A12">
 <link rel="stylesheet" href="/assets/css/style.css">
 <style>
   table { width: 100%; border-collapse: collapse; background: white; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-card); }
@@ -54,7 +54,9 @@
         </div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Ville</label><input type="text" id="rm-city" required></div>
+        <div class="field"><label>Ville</label><input type="text" id="rm-city" list="cm-cities" required>
+          <datalist id="cm-cities"><option value="Yaoundé"><option value="Douala"><option value="Kribi"><option value="Buea"><option value="Limbe"><option value="Bafoussam"><option value="Bamenda"><option value="Garoua"><option value="Maroua"><option value="Ngaoundéré"></datalist>
+        </div>
         <div class="field"><label>Pays</label><input type="text" id="rm-country" value="Cameroun" required></div>
       </div>
       <div class="field"><label>Adresse</label><input type="text" id="rm-address"></div>
