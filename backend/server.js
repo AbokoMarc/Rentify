@@ -37,18 +37,17 @@ function serveStatic(req, res, urlPath) {
 
   fs.readFile(filePath, (err, data) => {
     if (err) {
-      // fallback SPA-like : pages sans extension -> tente .html, sinon 404
       if (!path.extname(filePath)) {
         return fs.readFile(filePath + '.html', (err2, data2) => {
           if (err2) { res.writeHead(404); return res.end('Page introuvable'); }
-          res.writeHead(200, { 'Content-Type': MIME['.html'] });
+          res.writeHead(200, { 'Content-Type': MIME['.html'], 'Access-Control-Allow-Origin': '*' });
           res.end(data2);
         });
       }
       res.writeHead(404); return res.end('Fichier introuvable');
     }
     const ext = path.extname(filePath);
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
+    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream', 'Access-Control-Allow-Origin': '*' });
     res.end(data);
   });
 }
@@ -57,12 +56,13 @@ const server = http.createServer(async (req, res) => {
   const urlObj = new URL(req.url, `http://${req.headers.host}`);
   const urlPath = urlObj.pathname;
 
+  // Injection globale des en-têtes CORS pour TOUTES les requêtes entrantes
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
   if (req.method === 'OPTIONS') {
-    res.writeHead(204, {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    });
+    res.writeHead(204);
     return res.end();
   }
 
@@ -74,8 +74,8 @@ const server = http.createServer(async (req, res) => {
     const handlers = [handleAuth, handleRooms, handleBookings, handlePayments, handleReviews, handleFavorites, handleNotifications, handleAdminStats, handleAdminUsers, handleInquiries];
     for (const handler of handlers) {
       const result = await handler(req, res, urlPath, urlObj);
-      if (result !== null && result !== undefined) return; // déjà traité
-      if (res.writableEnded || res.headersSent) return; // réponse déjà envoyée ou en cours (ex : flux SSE) — ne jamais tenter de ré-écrire des en-têtes
+      if (result !== null && result !== undefined) return; 
+      if (res.writableEnded || res.headersSent) return; 
     }
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Route API introuvable.' }));
@@ -89,10 +89,9 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`🏠 Rentify backend démarré sur http://localhost:${PORT}`);
+  console.log(`🏠 Rentify backend démarré sur le port ${PORT}`);
 });
 
-// Filet de sécurité : une erreur imprévue dans une requête ne doit jamais faire tomber le serveur entier pour tout le monde.
 process.on('uncaughtException', (err) => {
   console.error('Exception non interceptée (serveur maintenu en vie) :', err);
 });

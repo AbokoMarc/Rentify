@@ -1,10 +1,21 @@
 {
-  "buildCommand": null,
-  "outputDirectory": "frontend",
+  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://REMPLACER-PAR-TON-URL-RENDER.onrender.com/api/:path*"
+      "destination": "https://onrender.com*"
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "/frontend/admin/:path*"
+    },
+    {
+      "source": "/assets/:path*",
+      "destination": "/frontend/assets/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/frontend/:path*"
     }
   ]
 }

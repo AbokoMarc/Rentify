@@ -1,6 +1,6 @@
 // Numéro WhatsApp de l'admin — un seul endroit à changer sur tout le site.
 // ⚠️ PLACEHOLDER : remplace par le vrai numéro (format international, sans le +).
-const WHATSAPP_ADMIN_NUMBER = '237600000000';
+const WHATSAPP_ADMIN_NUMBER = '237681021887';
 
 function whatsappUrl(prefill) {
   const text = encodeURIComponent(prefill || 'Bonjour, je vous contacte depuis Rentify.');
