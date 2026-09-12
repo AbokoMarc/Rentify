@@ -238,6 +238,45 @@ function mountAdminLayout(active = '') {
   bootstrapPushNotifications();
 }
 
+function renderMustChangePasswordModal() {
+  return `
+  <div class="overlay" id="mcp-overlay" style="z-index:200">
+    <div class="modal" style="max-width:420px">
+      <h2>Change ton mot de passe</h2>
+      <p class="modal-sub">Un administrateur t'a communiqué un mot de passe temporaire. Choisis-en un nouveau pour continuer.</p>
+      <form id="mcp-form">
+        <div class="field"><label>Mot de passe temporaire (reçu)</label><input type="password" id="mcp-current" required></div>
+        <div class="field"><label>Nouveau mot de passe</label><input type="password" id="mcp-new" required minlength="6" placeholder="6 caractères minimum"></div>
+        <div id="mcp-error" style="color:var(--clay);font-size:13px;margin-bottom:10px;display:none"></div>
+        <button type="submit" class="btn btn-primary btn-block">Valider</button>
+      </form>
+    </div>
+  </div>`;
+}
+
+function mountMustChangePasswordGate() {
+  const user = Auth.getUser();
+  if (!user || !user.must_change_password) return;
+  document.body.insertAdjacentHTML('beforeend', renderMustChangePasswordModal());
+  document.getElementById('mcp-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById('mcp-error');
+    errEl.style.display = 'none';
+    try {
+      await api('/auth/change-password', {
+        method: 'PUT',
+        body: { current_password: document.getElementById('mcp-current').value, new_password: document.getElementById('mcp-new').value },
+      });
+      const updated = { ...user, must_change_password: false };
+      Auth.setUser(updated);
+      document.getElementById('mcp-overlay').remove();
+      showToast('Mot de passe mis à jour', '', 'success');
+    } catch (err) {
+      errEl.textContent = err.message; errEl.style.display = 'block';
+    }
+  });
+}
+
 function mountLayout(active = '') {
   const headerMount = document.getElementById('app-header');
   const footerMount = document.getElementById('app-footer');
@@ -254,4 +293,5 @@ function mountLayout(active = '') {
 
   if (typeof I18N !== 'undefined') I18N.apply();
   bootstrapPushNotifications();
+  mountMustChangePasswordGate();
 }

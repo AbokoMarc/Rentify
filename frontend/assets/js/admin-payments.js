@@ -1,6 +1,7 @@
 mountAdminLayout('payments');
 
 const METHOD_LABELS = { crypto: 'Crypto', mobile_money: 'Mobile Money' };
+let allPayments = [];
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -13,6 +14,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 async function loadPending() {
   try {
     const { payments } = await api('/admin/payments');
+    allPayments = payments;
     // Seuls les paiements crypto nécessitent une vérification manuelle ; le Mobile Money (CamPay)
     // se valide tout seul via webhook, il apparaît juste dans "Tous les paiements".
     const pending = payments.filter(p => p.status === 'en_attente' && p.method === 'crypto');
@@ -71,3 +73,18 @@ qs('wallet-form').addEventListener('submit', async (e) => {
 
 loadPending();
 loadWallet();
+
+qs('export-payments-btn').innerHTML = `${ICONS.download} Exporter en CSV`;
+qs('export-payments-btn').addEventListener('click', () => {
+  if (!allPayments.length) { showToast('Rien à exporter', 'Aucun paiement chargé.', 'warn'); return; }
+  exportToCsv(`lokaya-paiements-${new Date().toISOString().slice(0, 10)}.csv`, [
+    { label: 'Réservation', value: p => p.booking_code },
+    { label: 'Client', value: p => p.client_name },
+    { label: 'Méthode', value: p => METHOD_LABELS[p.method] || p.method },
+    { label: 'Fournisseur', value: p => p.provider || '' },
+    { label: 'Montant (FCFA)', value: p => Math.round(p.amount) },
+    { label: 'Statut', value: p => p.status },
+    { label: 'Référence', value: p => p.reference || '' },
+    { label: 'Date', value: p => p.created_at },
+  ], allPayments);
+});

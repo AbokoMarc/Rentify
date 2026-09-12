@@ -22,14 +22,30 @@
 <body>
 <div id="app-header"></div>
 <div class="container" style="padding:32px 24px 60px">
-  <h1 style="font-size:26px;margin-bottom:6px">Vendeurs à valider</h1>
-  <p style="color:var(--muted-text);margin-bottom:24px">Un compte doit être validé ici avant que la personne puisse proposer des annonces. Chaque annonce qu'elle soumet ensuite reste, elle, à valider séparément dans "Logements".</p>
+  <h1 style="font-size:26px;margin-bottom:6px">Vendeurs</h1>
+  <p style="color:var(--muted-text);margin-bottom:20px">Un compte doit être validé ici avant que la personne puisse proposer des annonces. Chaque annonce qu'elle soumet ensuite reste, elle, à valider séparément dans "Logements".</p>
 
-  <div style="overflow-x:auto">
-    <table class="responsive-table">
-      <thead><tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>Ville</th><th>Demande le</th><th>Actions</th></tr></thead>
-      <tbody id="sellers-tbody"><tr><td colspan="6" style="padding:30px;text-align:center;color:var(--muted-text)">Chargement…</td></tr></tbody>
-    </table>
+  <div style="display:flex;gap:8px;margin-bottom:20px">
+    <button class="tab-btn active" data-tab="pending">En attente</button>
+    <button class="tab-btn" data-tab="all">Tous les vendeurs</button>
+  </div>
+
+  <div id="tab-pending">
+    <div style="overflow-x:auto">
+      <table class="responsive-table">
+        <thead><tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>Ville</th><th>Demande le</th><th>Actions</th></tr></thead>
+        <tbody id="sellers-tbody"><tr><td colspan="6" style="padding:30px;text-align:center;color:var(--muted-text)">Chargement…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-all" class="hidden">
+    <div style="overflow-x:auto">
+      <table class="responsive-table">
+        <thead><tr><th>Nom</th><th>Email</th><th>Ville</th><th>Statut</th><th>Annonces</th><th>Publiées</th><th>Inscrit le</th></tr></thead>
+        <tbody id="all-sellers-tbody"><tr><td colspan="7" style="padding:30px;text-align:center;color:var(--muted-text)">Chargement…</td></tr></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -76,6 +92,35 @@ qs('sellers-tbody').addEventListener('click', async (e) => {
     catch (err) { showToast('Erreur', err.message, 'warn'); }
   }
 });
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    ['pending', 'all'].forEach(t => qs(`tab-${t}`).classList.toggle('hidden', t !== btn.dataset.tab));
+    if (btn.dataset.tab === 'all') loadAllSellers();
+  });
+});
+
+const SELLER_STATUS_LABELS = { en_attente: '⏳ En attente', approuve: '✓ Validé', rejete: '✕ Refusé' };
+
+async function loadAllSellers() {
+  try {
+    const { sellers } = await api('/admin/sellers');
+    qs('all-sellers-tbody').innerHTML = sellers.length ? sellers.map(s => `
+      <tr>
+        <td data-label="Nom"><strong>${escapeHtml(s.name)}</strong></td>
+        <td data-label="Email">${escapeHtml(s.email)}</td>
+        <td data-label="Ville">${escapeHtml(s.city || '—')}</td>
+        <td data-label="Statut">${SELLER_STATUS_LABELS[s.vendeur_statut] || s.vendeur_statut}</td>
+        <td data-label="Annonces">${s.listings_count}</td>
+        <td data-label="Publiées">${s.published_count}</td>
+        <td data-label="Inscrit le">${formatDate(s.created_at)}</td>
+      </tr>`).join('') : `<tr><td colspan="7" style="padding:30px;text-align:center;color:var(--muted-text)">Aucun vendeur pour l'instant.</td></tr>`;
+  } catch (err) {
+    qs('all-sellers-tbody').innerHTML = `<tr><td colspan="7" style="padding:20px;color:var(--clay)">${escapeHtml(err.message)}</td></tr>`;
+  }
+}
 
 loadSellers();
 </script>

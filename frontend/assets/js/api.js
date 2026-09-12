@@ -46,7 +46,23 @@ function requireAdminOrRedirect() {
   return true;
 }
 
-// Taux fixe d'affichage (FCFA est arrimé à l'Euro à ce taux, invariable) — sert uniquement à
+// Export CSV générique — utilisé par les pages admin pour télécharger un historique (réservations, paiements...).
+// columns : [{ label: 'Titre colonne', value: row => 'valeur' }]
+function exportToCsv(filename, columns, rows) {
+  const escapeCsv = (v) => {
+    const s = String(v ?? '');
+    return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const header = columns.map(c => escapeCsv(c.label)).join(';');
+  const lines = rows.map(row => columns.map(c => escapeCsv(c.value(row))).join(';'));
+  const csv = '\uFEFF' + [header, ...lines].join('\n'); // \uFEFF = BOM, pour un affichage correct des accents dans Excel
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 // montrer l'équivalent Euro à titre indicatif, tous les montants réels sont gérés en FCFA (XAF).
 const XAF_PER_EUR = 655.957;
 

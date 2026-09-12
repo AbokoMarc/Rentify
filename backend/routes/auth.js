@@ -68,6 +68,20 @@ export async function handleAuth(req, res, urlPath) {
     return json(res, 200, { success: true });
   }
 
+  // Un client oublie son mot de passe : on notifie l'admin, qui peut générer et transmettre un mot de passe
+  // temporaire (Espace admin > Clients > Réinitialiser). Pas de fuite d'info : réponse identique que l'email existe ou non.
+  if (urlPath === '/api/auth/forgot-password' && req.method === 'POST') {
+    const { email } = await parseBody(req);
+    if (email) {
+      const user = await db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase().trim());
+      if (user) {
+        const { notifyAdmins } = await import('../lib/notify.js');
+        await notifyAdmins('mot_de_passe_oublie', 'Demande de mot de passe oublié', `${user.name} (${user.email}) a demandé la réinitialisation de son mot de passe.`, { user_id: user.id });
+      }
+    }
+    return json(res, 200, { message: "Si un compte existe avec cet email, l'administrateur a été prévenu et te contactera avec un nouveau mot de passe." });
+  }
+
   if (urlPath === '/api/auth/login' && req.method === 'POST') {
     const { email, password } = await parseBody(req);
     if (!email || !password) return json(res, 400, { error: 'Email et mot de passe requis.' });

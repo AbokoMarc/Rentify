@@ -64,3 +64,19 @@ qs('bookings-tbody').addEventListener('click', async (e) => {
 });
 
 loadBookings();
+
+qs('export-bookings-btn').innerHTML = `${ICONS.download} Exporter en CSV`;
+qs('export-bookings-btn').addEventListener('click', () => {
+  if (!allBookings.length) { showToast('Rien à exporter', 'Aucune réservation chargée.', 'warn'); return; }
+  exportToCsv(`lokaya-reservations-${new Date().toISOString().slice(0, 10)}.csv`, [
+    { label: 'Code', value: b => b.code },
+    { label: 'Client', value: b => b.client_name },
+    { label: 'Email', value: b => b.client_email },
+    { label: 'Logement', value: b => b.room?.title || '' },
+    { label: 'Arrivée', value: b => b.check_in },
+    { label: 'Départ', value: b => b.check_out },
+    { label: 'Nuits', value: b => b.nights },
+    { label: 'Montant (FCFA)', value: b => Math.round(b.total_price) },
+    { label: 'Statut', value: b => b.status },
+  ], allBookings);
+});

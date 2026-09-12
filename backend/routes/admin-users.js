@@ -87,6 +87,19 @@ export async function handleAdminUsers(req, res, urlPath) {
     return json(res, 200, { temp_password: tempPassword, email: user.email, name: user.name });
   }
 
+  // GET /api/admin/sellers — tous les vendeurs (quel que soit leur statut), avec le nombre d'annonces de chacun
+  if (urlPath === '/api/admin/sellers' && req.method === 'GET') {
+    const admin = requireAdmin(req, res);
+    if (!admin) return;
+    const rows = await db.prepare(`
+      SELECT users.id, users.name, users.email, users.phone, users.city, users.vendeur_statut, users.created_at,
+        (SELECT COUNT(*) FROM rooms WHERE rooms.owner_id = users.id) as listings_count,
+        (SELECT COUNT(*) FROM rooms WHERE rooms.owner_id = users.id AND rooms.approval_status = 'approuve') as published_count
+      FROM users WHERE role = 'vendeur' ORDER BY created_at DESC
+    `).all();
+    return json(res, 200, { sellers: rows });
+  }
+
   // GET /api/admin/sellers/pending — comptes vendeur en attente de validation
   if (urlPath === '/api/admin/sellers/pending' && req.method === 'GET') {
     const admin = requireAdmin(req, res);

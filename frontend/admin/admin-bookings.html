@@ -22,8 +22,11 @@
 <body>
 <div id="app-header"></div>
 <div class="container" style="padding:32px 24px 60px">
-  <h1 style="font-size:26px;margin-bottom:6px">Réservations</h1>
-  <p style="color:var(--muted-text);margin-bottom:24px">Toutes les réservations effectuées sur Lokaya.</p>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+    <div><h1 style="font-size:26px;margin-bottom:6px">Réservations</h1>
+    <p style="color:var(--muted-text);margin-bottom:24px">Toutes les réservations effectuées sur Lokaya.</p></div>
+    <button class="btn btn-ghost btn-sm" id="export-bookings-btn" style="display:inline-flex;align-items:center;gap:6px"></button>
+  </div>
 
   <div class="tabs" id="status-tabs">
     <button class="tab-btn active" data-status="">Toutes</button>
