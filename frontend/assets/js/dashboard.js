@@ -58,9 +58,9 @@ async function loadFavoris() {
     qs('favoris-grid').innerHTML = rooms.length
       ? rooms.map(room => `
         <a href="/room.html?id=${room.id}" class="room-card">
-          <div class="room-img-wrap"><img src="${room.images[0] || DEFAULT_IMG}"><span class="room-type-tag">${room.type}</span></div>
+          <div class="room-img-wrap"><img src="${room.images[0] || DEFAULT_IMG}" alt="${escapeHtml(room.title)}" loading="lazy"><span class="verified-badge">✓ Vérifié</span><span class="room-type-tag">${room.type}</span></div>
           <div class="room-body"><h3>${escapeHtml(room.title)}</h3><div class="room-meta">${escapeHtml(room.city)}</div>
-          <div class="room-price"><span class="amount">${money(room.price_per_night, { compact: true })}</span><span class="per-night">/ nuit</span></div></div>
+          <div class="room-price"><span class="amount">${money(room.price_per_night, { compact: true, period: room.pricing_period })}</span></div></div>
         </a>`).join('')
       : `<div class="empty-state" style="grid-column:1/-1"><i>♥</i>Aucun favori pour l'instant.</div>`;
   } catch (err) {

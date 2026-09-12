@@ -35,7 +35,19 @@ async function loadRoom() {
   try {
     const { room, reviews } = await api(`/rooms/${roomId}`, { auth: false });
     currentRoom = room;
-    document.title = `${room.title} — Rentify`;
+    const periodLabel = room.pricing_period === 'mois' ? '/mois' : '/nuit';
+    const priceLabel = `${Math.round(room.price_per_night).toLocaleString('fr-FR')} FCFA ${periodLabel}`;
+    document.title = `${room.title} à ${room.city} — ${priceLabel} | Lokaya`;
+    const descTag = document.querySelector('meta[name="description"]');
+    if (descTag) descTag.setAttribute('content', `${room.title} à ${room.city}, ${room.country}. ${priceLabel}. Découvrez les photos, équipements et disponibilité sur Lokaya.`);
+    const ogTitle = document.createElement('meta');
+    ogTitle.setAttribute('property', 'og:title'); ogTitle.setAttribute('content', `${room.title} à ${room.city} — ${priceLabel}`);
+    document.head.appendChild(ogTitle);
+    if (room.images[0]) {
+      const ogImg = document.createElement('meta');
+      ogImg.setAttribute('property', 'og:image'); ogImg.setAttribute('content', room.images[0]);
+      document.head.appendChild(ogImg);
+    }
     qs('breadcrumb').innerHTML = `<a href="/index.html">Accueil</a> › <a href="/search.html">Logements</a> › ${escapeHtml(room.city)}`;
     qs('gallery-wrap').innerHTML = galleryHtml(room.images);
     qs('r-title').textContent = room.title;
@@ -65,7 +77,7 @@ async function loadRoom() {
         </div>`).join('')
       : `<div class="empty-state" style="padding:24px"><i>💬</i>Aucun avis pour l'instant.</div>`;
 
-    qs('bw-price').innerHTML = money(room.price_per_night, { compact: true });
+    qs('bw-price').innerHTML = money(room.price_per_night, { compact: true, period: room.pricing_period });
     qs('bw-rating').innerHTML = room.reviews_count > 0 ? `★ ${room.rating}` : '';
 
     if (Auth.isLoggedIn()) {
@@ -145,3 +157,11 @@ qs('bw-submit').addEventListener('click', async () => {
 });
 
 loadRoom();
+
+qs('r-verified-btn').addEventListener('click', () => {
+  showToast(
+    'Annonce vérifiée par Lokaya ✓',
+    "Avant publication, notre équipe contrôle : l'existence du logement, la cohérence des photos, la localisation et le prix annoncé. Le compte du vendeur est également validé.",
+    'success'
+  );
+});

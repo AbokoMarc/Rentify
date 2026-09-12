@@ -1,15 +1,15 @@
 const API_BASE = '/api';
 
 const Auth = {
-  getToken() { return localStorage.getItem('rentify_token') || localStorage.getItem('roomia_token'); },
-  setToken(t) { localStorage.setItem('rentify_token', t); localStorage.removeItem('roomia_token'); },
-  clearToken() { localStorage.removeItem('rentify_token'); localStorage.removeItem('roomia_token'); },
+  getToken() { return localStorage.getItem('lokaya_token') || localStorage.getItem('rentify_token') || localStorage.getItem('roomia_token'); },
+  setToken(t) { localStorage.setItem('lokaya_token', t); localStorage.removeItem('rentify_token'); localStorage.removeItem('roomia_token'); },
+  clearToken() { localStorage.removeItem('lokaya_token'); localStorage.removeItem('rentify_token'); localStorage.removeItem('roomia_token'); },
   getUser() {
-    const raw = localStorage.getItem('rentify_user') || localStorage.getItem('roomia_user');
+    const raw = localStorage.getItem('lokaya_user') || localStorage.getItem('rentify_user') || localStorage.getItem('roomia_user');
     return raw ? JSON.parse(raw) : null;
   },
-  setUser(u) { localStorage.setItem('rentify_user', JSON.stringify(u)); localStorage.removeItem('roomia_user'); },
-  clearUser() { localStorage.removeItem('rentify_user'); localStorage.removeItem('roomia_user'); },
+  setUser(u) { localStorage.setItem('lokaya_user', JSON.stringify(u)); localStorage.removeItem('rentify_user'); localStorage.removeItem('roomia_user'); },
+  clearUser() { localStorage.removeItem('lokaya_user'); localStorage.removeItem('rentify_user'); localStorage.removeItem('roomia_user'); },
   isLoggedIn() { return !!this.getToken(); },
   isAdmin() { return this.getUser()?.role === 'admin'; },
   logout() { this.clearToken(); this.clearUser(); window.location.href = '/index.html'; },
@@ -50,11 +50,12 @@ function requireAdminOrRedirect() {
 // montrer l'équivalent Euro à titre indicatif, tous les montants réels sont gérés en FCFA (XAF).
 const XAF_PER_EUR = 655.957;
 
-function money(amount, { compact = false } = {}) {
+function money(amount, { compact = false, period = null } = {}) {
   const xaf = Math.round(amount).toLocaleString('fr-FR') + ' FCFA';
-  if (compact) return xaf;
+  const suffix = period ? (period === 'mois' ? ' /mois' : ' /nuit') : '';
+  if (compact) return xaf + suffix;
   const eur = (amount / XAF_PER_EUR).toLocaleString('fr-FR', { maximumFractionDigits: 0 });
-  return `${xaf} <span class="price-eur-hint">(≈ ${eur} €)</span>`;
+  return `${xaf}${suffix} <span class="price-eur-hint">(≈ ${eur} €)</span>`;
 }
 
 function formatDate(iso) {

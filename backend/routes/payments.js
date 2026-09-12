@@ -85,7 +85,7 @@ export async function handlePayments(req, res, urlPath) {
     try {
       const { reference, operator } = await collectCampayPayment({
         amount: booking.total_price, phone,
-        description: `Rentify — réservation ${booking.code}`,
+        description: `Lokaya — réservation ${booking.code}`,
         externalReference,
       });
       // On garde la référence CamPay (nécessaire pour le webhook / la vérification de statut).

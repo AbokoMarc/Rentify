@@ -37,17 +37,18 @@ function serveStatic(req, res, urlPath) {
 
   fs.readFile(filePath, (err, data) => {
     if (err) {
+      // fallback SPA-like : pages sans extension -> tente .html, sinon 404
       if (!path.extname(filePath)) {
         return fs.readFile(filePath + '.html', (err2, data2) => {
           if (err2) { res.writeHead(404); return res.end('Page introuvable'); }
-          res.writeHead(200, { 'Content-Type': MIME['.html'], 'Access-Control-Allow-Origin': '*' });
+          res.writeHead(200, { 'Content-Type': MIME['.html'] });
           res.end(data2);
         });
       }
       res.writeHead(404); return res.end('Fichier introuvable');
     }
     const ext = path.extname(filePath);
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream', 'Access-Control-Allow-Origin': '*' });
+    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
     res.end(data);
   });
 }
@@ -56,13 +57,12 @@ const server = http.createServer(async (req, res) => {
   const urlObj = new URL(req.url, `http://${req.headers.host}`);
   const urlPath = urlObj.pathname;
 
-  // Injection globale des en-têtes CORS pour TOUTES les requêtes entrantes
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
   if (req.method === 'OPTIONS') {
-    res.writeHead(204);
+    res.writeHead(204, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    });
     return res.end();
   }
 
@@ -70,12 +70,24 @@ const server = http.createServer(async (req, res) => {
     return serveStatic(req, res, urlPath);
   }
 
+  if (urlPath === '/api/sitemap.xml' && req.method === 'GET') {
+    const BASE = process.env.PUBLIC_SITE_URL || 'https://frontend-woad-gamma-91.vercel.app';
+    const staticPages = ['/index.html', '/search.html', '/immobilier.html', '/vendeur.html', '/apropos.html', '/aide.html', '/annulation.html'];
+    const rows = await db.prepare(`SELECT id, updated_at FROM rooms WHERE status = 'disponible' AND approval_status = 'approuve'`).all();
+    const urls = [
+      ...staticPages.map(p => `<url><loc>${BASE}${p}</loc><changefreq>daily</changefreq><priority>${p === '/index.html' ? '1.0' : '0.7'}</priority></url>`),
+      ...rows.map(r => `<url><loc>${BASE}/room.html?id=${r.id}</loc><lastmod>${(r.updated_at || '').slice(0, 10)}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`),
+    ];
+    res.writeHead(200, { 'Content-Type': 'application/xml; charset=utf-8' });
+    return res.end(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`);
+  }
+
   try {
     const handlers = [handleAuth, handleRooms, handleBookings, handlePayments, handleReviews, handleFavorites, handleNotifications, handleAdminStats, handleAdminUsers, handleInquiries];
     for (const handler of handlers) {
       const result = await handler(req, res, urlPath, urlObj);
-      if (result !== null && result !== undefined) return; 
-      if (res.writableEnded || res.headersSent) return; 
+      if (result !== null && result !== undefined) return; // déjà traité
+      if (res.writableEnded || res.headersSent) return; // réponse déjà envoyée ou en cours (ex : flux SSE) — ne jamais tenter de ré-écrire des en-têtes
     }
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Route API introuvable.' }));
@@ -89,9 +101,10 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`🏠 Rentify backend démarré sur le port ${PORT}`);
+  console.log(`🏠 Lokaya backend démarré sur http://localhost:${PORT}`);
 });
 
+// Filet de sécurité : une erreur imprévue dans une requête ne doit jamais faire tomber le serveur entier pour tout le monde.
 process.on('uncaughtException', (err) => {
   console.error('Exception non interceptée (serveur maintenu en vie) :', err);
 });

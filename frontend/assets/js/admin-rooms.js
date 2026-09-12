@@ -22,7 +22,7 @@ function rowHtml(r) {
     <td data-label="Titre"><strong>${escapeHtml(r.title)}</strong>${r.owner_name ? `<div style="font-size:12px;color:var(--muted-text)">par ${escapeHtml(r.owner_name)}</div>` : ''}</td>
     <td data-label="Ville / Pays">${escapeHtml(r.city)}, ${escapeHtml(r.country || '')}</td>
     <td data-label="Type" style="text-transform:capitalize">${r.type}</td>
-    <td data-label="Prix / nuit">${Math.round(r.price_per_night).toLocaleString('fr-FR')} FCFA</td>
+    <td data-label="Prix">${Math.round(r.price_per_night).toLocaleString('fr-FR')} FCFA / ${r.pricing_period === 'mois' ? 'mois' : 'nuit'}</td>
     <td data-label="Validation">${approvalBadgeHtml(r)}</td>
     <td data-label="Statut">${statusBadgeHtml(r.status)}</td>
     <td class="row-actions">
@@ -64,6 +64,8 @@ function openModal(room = null) {
   qs('rm-lng').value = room?.longitude ?? '';
   qs('rm-desc').value = room?.description || '';
   qs('rm-price').value = room?.price_per_night ?? '';
+  qs('rm-pricing-period').value = room?.pricing_period || 'nuit';
+  qs('rm-furnished').value = room?.furnished === 1 ? '1' : room?.furnished === 0 ? '0' : '';
   qs('rm-adults').value = room?.capacity_adults ?? 2;
   qs('rm-children').value = room?.capacity_children ?? 0;
   qs('rm-bedrooms').value = room?.bedrooms ?? 1;
@@ -132,6 +134,8 @@ qs('room-form').addEventListener('submit', async (e) => {
     longitude: qs('rm-lng').value ? Number(qs('rm-lng').value) : null,
     description: qs('rm-desc').value.trim(),
     price_per_night: Number(qs('rm-price').value),
+    pricing_period: qs('rm-pricing-period').value,
+    furnished: qs('rm-furnished').value === '' ? null : Number(qs('rm-furnished').value),
     capacity_adults: Number(qs('rm-adults').value),
     capacity_children: Number(qs('rm-children').value),
     bedrooms: Number(qs('rm-bedrooms').value),

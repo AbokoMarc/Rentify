@@ -121,15 +121,14 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; margin: 0; 
 /* ---------- Hero ---------- */
 .hero {
   background: linear-gradient(155deg, var(--ink) 0%, var(--ink-deep) 70%, #0C0805 100%);
-  color: white; padding: 64px 0 190px; position: relative; overflow: hidden;
-  clip-path: polygon(0 0, 100% 0, 100% 88%, 0 100%);
+  color: white; padding: 64px 0 150px; position: relative; overflow: hidden;
 }
 .hero::after {
   content: ''; position: absolute; right: -80px; top: -80px; width: 420px; height: 420px; border-radius: 50%;
   background: radial-gradient(circle, rgba(201,120,30,0.22), transparent 70%);
 }
 .hero::before {
-  content: ''; position: absolute; left: -120px; bottom: -80px; width: 380px; height: 380px; border-radius: 50%;
+  content: ''; position: absolute; left: -120px; bottom: -140px; width: 380px; height: 380px; border-radius: 50%;
   background: radial-gradient(circle, rgba(184,74,42,0.18), transparent 70%);
 }
 .hero h1 { color: white; font-size: 44px; line-height: 1.15; max-width: 640px; }
@@ -137,7 +136,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; margin: 0; 
 
 .search-card {
   background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-pop);
-  padding: 22px; margin-top: -124px; position: relative; z-index: 10;
+  padding: 22px; margin-top: -84px; position: relative; z-index: 10;
   display: grid; grid-template-columns: 1.3fr 1.3fr 1fr auto; gap: 0;
 }
 .search-field {
@@ -194,6 +193,10 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; margin: 0; 
 .room-type-tag {
   position: absolute; top: 12px; left: 12px; background: white; color: var(--ink); font-size: 11px; font-weight: 700;
   padding: 4px 10px; border-radius: 999px; text-transform: capitalize;
+}
+.verified-badge {
+  position: absolute; top: 12px; right: 12px; background: var(--forest); color: white; font-size: 11px; font-weight: 700;
+  padding: 4px 10px; border-radius: 999px; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 .room-card .room-body { padding: 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
 .room-card h3 { font-size: 17px; }

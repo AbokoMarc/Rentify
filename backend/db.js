@@ -7,7 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // En production (Render, etc.) : pointe vers ta base Turso (TURSO_DATABASE_URL + TURSO_AUTH_TOKEN).
 // En local, sans ces variables : utilise un simple fichier SQLite local — aucun compte Turso requis pour développer.
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'data', 'rentify.db');
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'data', 'lokaya.db');
 const url = process.env.TURSO_DATABASE_URL || `file:${DB_PATH}`;
 const authToken = process.env.TURSO_AUTH_TOKEN; // undefined en local — OK, non requis pour un fichier local
 
@@ -97,7 +97,9 @@ await db.exec(`
     rejection_reason TEXT,
     latitude REAL,
     longitude REAL,
-    price_per_night REAL NOT NULL,
+    price_per_night REAL NOT NULL, -- nom historique de la colonne ; voir pricing_period pour son unité réelle (nuit ou mois)
+    pricing_period TEXT NOT NULL DEFAULT 'nuit', -- nuit | mois — période à laquelle s'applique price_per_night
+    furnished INTEGER, -- 1 = meublé, 0 = non meublé, NULL = non précisé (pertinent pour location longue durée)
     capacity_adults INTEGER NOT NULL DEFAULT 2,
     capacity_children INTEGER NOT NULL DEFAULT 0,
     bedrooms INTEGER NOT NULL DEFAULT 1,

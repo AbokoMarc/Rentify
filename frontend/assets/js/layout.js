@@ -3,7 +3,7 @@
 const WHATSAPP_ADMIN_NUMBER = '237681021887';
 
 function whatsappUrl(prefill) {
-  const text = encodeURIComponent(prefill || 'Bonjour, je vous contacte depuis Rentify.');
+  const text = encodeURIComponent(prefill || 'Bonjour, je vous contacte depuis Lokaya.');
   return `https://wa.me/${WHATSAPP_ADMIN_NUMBER}?text=${text}`;
 }
 
@@ -26,8 +26,8 @@ function renderHeader(active = '') {
 
   const commonTools = `
     ${typeof renderLangSwitcher === 'function' ? renderLangSwitcher() : ''}
-    <button class="icon-btn" id="theme-btn" aria-label="Thème">🌙</button>
-    <button class="icon-btn" id="budget-calc-btn" aria-label="Calculateur budget" data-i18n-title="budget_calc" title="Calculateur de budget">💰</button>
+    <button class="icon-btn" id="theme-btn" aria-label="Thème">${ICONS.moon}</button>
+    <button class="icon-btn" id="budget-calc-btn" aria-label="Calculateur budget" data-i18n-title="budget_calc" title="Calculateur de budget">${ICONS.wallet}</button>
   `;
 
   const sellerBadge = isSeller
@@ -38,7 +38,7 @@ function renderHeader(active = '') {
 
   const rightSide = loggedIn ? `
     ${commonTools}
-    <button class="icon-btn" id="notif-bell" aria-label="Notifications">🔔<span class="badge-dot hidden" id="notif-badge">0</span></button>
+    <button class="icon-btn" id="notif-bell" aria-label="Notifications">${ICONS.bell}<span class="badge-dot hidden" id="notif-badge">0</span></button>
     <div class="notif-panel hidden" id="notif-panel">
       <div class="np-head"><strong>Notifications</strong></div>
       <div class="np-body"></div>
@@ -74,7 +74,7 @@ function renderHeader(active = '') {
   return `
   <header class="site-header">
     <div class="container">
-      <a href="/index.html" class="brand"><img src="/assets/img/logo-icon.png" alt="Rentify" class="logo-mark">Rentify</a>
+      <a href="/index.html" class="brand"><img src="/assets/img/logo-icon.png" alt="Lokaya" class="logo-mark">Lokaya</a>
       <nav class="main-nav">
         ${navLink('/index.html', 'Accueil', 'home').replace('>Accueil<', ' data-i18n="nav_home">Accueil<')}
         ${navLink('/search.html', 'Explorer', 'search').replace('>Explorer<', ' data-i18n="nav_explore">Explorer<')}
@@ -84,12 +84,12 @@ function renderHeader(active = '') {
       </nav>
       <div class="header-actions" style="position:relative">
         ${rightSide}
-        <button class="hamburger-btn" id="mobile-nav-btn" aria-label="Menu">☰</button>
+        <button class="hamburger-btn" id="mobile-nav-btn" aria-label="Menu">${ICONS.menu}</button>
       </div>
     </div>
     <div class="mobile-nav-drawer hidden" id="mobile-nav-drawer">
       <div class="drawer-panel">
-        <button class="drawer-close" id="mobile-nav-close">✕</button>
+        <button class="drawer-close" id="mobile-nav-close">${ICONS.close}</button>
         ${drawerLinks}
       </div>
     </div>
@@ -103,23 +103,23 @@ function renderFooter() {
       <div class="footer-grid">
         <div>
           <div class="brand" style="color:white;margin-bottom:12px">
-            <img src="/assets/img/logo-icon.png" alt="Rentify" class="logo-mark">Rentify
+            <img src="/assets/img/logo-icon.png" alt="Lokaya" class="logo-mark">Lokaya
           </div>
           <p style="font-size:14px;line-height:1.6;max-width:280px" data-i18n="footer_tagline">Réservez chambres, appartements et maisons partout au Cameroun. Paiement en Mobile Money. Achat et location de biens accompagnés par nos conseillers.</p>
         </div>
         <div>
-          <h4 data-i18n="footer_explore_title">Rentify</h4>
+          <h4 data-i18n="footer_explore_title">Lokaya</h4>
           <ul>
             <li><a href="/search.html" data-i18n="footer_link_explore">Explorer les logements</a></li>
             <li><a href="/index.html#villes" data-i18n="footer_link_cities">Nos villes</a></li>
-            <li><a href="#" data-i18n="footer_link_about">À propos</a></li>
+            <li><a href="/apropos.html" data-i18n="footer_link_about">À propos</a></li>
           </ul>
         </div>
         <div>
           <h4 data-i18n="footer_support_title">Assistance</h4>
           <ul>
-            <li><a href="#" data-i18n="footer_link_help">Centre d'aide</a></li>
-            <li><a href="#" data-i18n="footer_link_cancel">Annulation</a></li>
+            <li><a href="/aide.html" data-i18n="footer_link_help">Centre d'aide</a></li>
+            <li><a href="/annulation.html" data-i18n="footer_link_cancel">Annulation</a></li>
             <li><a href="${whatsappUrl()}" target="_blank" rel="noopener" data-i18n="footer_link_contact">Contact WhatsApp</a></li>
           </ul>
         </div>
@@ -132,7 +132,7 @@ function renderFooter() {
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© ${new Date().getFullYear()} Rentify</span>
+        <span>© ${new Date().getFullYear()} Lokaya</span>
         <span data-i18n="footer_rights">Réservation de logements en toute confiance, au Cameroun</span>
       </div>
     </div>
@@ -146,7 +146,7 @@ function renderAdminHeader(active = '') {
   return `
   <header class="site-header">
     <div class="container">
-      <a href="/admin/admin-dashboard.html" class="brand"><img src="/assets/img/logo-icon.png" alt="Rentify" class="logo-mark">Rentify <span style="font-size:12px;background:var(--gold);color:var(--ink-deep);padding:3px 8px;border-radius:6px;margin-left:6px;font-family:var(--font-body);font-weight:700">ADMIN</span></a>
+      <a href="/admin/admin-dashboard.html" class="brand"><img src="/assets/img/logo-icon.png" alt="Lokaya" class="logo-mark">Lokaya <span style="font-size:12px;background:var(--gold);color:var(--ink-deep);padding:3px 8px;border-radius:6px;margin-left:6px;font-family:var(--font-body);font-weight:700">ADMIN</span></a>
       <nav class="main-nav">
         ${link('/admin/admin-dashboard.html', 'Tableau de bord', 'dash')}
         ${link('/admin/admin-rooms.html', 'Logements', 'rooms')}
@@ -158,18 +158,18 @@ function renderAdminHeader(active = '') {
         ${link('/admin/admin-settings.html', 'Paramètres', 'settings')}
       </nav>
       <div class="header-actions" style="position:relative">
-        <button class="icon-btn" id="theme-btn" aria-label="Thème">🌙</button>
-        <button class="icon-btn" id="notif-bell" aria-label="Notifications">🔔<span class="badge-dot hidden" id="notif-badge">0</span></button>
+        <button class="icon-btn" id="theme-btn" aria-label="Thème">${ICONS.moon}</button>
+        <button class="icon-btn" id="notif-bell" aria-label="Notifications">${ICONS.bell}<span class="badge-dot hidden" id="notif-badge">0</span></button>
         <div class="notif-panel hidden" id="notif-panel"><div class="np-head"><strong>Notifications</strong></div><div class="np-body"></div></div>
         <a href="/index.html" class="btn btn-ghost btn-sm"><span class="btn-label-full">Voir le site</span><span class="btn-label-short" style="display:none">🔗</span></a>
         <a href="${user ? '/admin/admin-settings.html' : '#'}" class="user-chip"><span class="avatar">${(user?.name || 'A').slice(0, 1).toUpperCase()}</span></a>
         <button class="btn btn-ghost btn-sm" id="logout-btn">Déconnexion</button>
-        <button class="hamburger-btn" id="mobile-nav-btn" aria-label="Menu">☰</button>
+        <button class="hamburger-btn" id="mobile-nav-btn" aria-label="Menu">${ICONS.menu}</button>
       </div>
     </div>
     <div class="mobile-nav-drawer hidden" id="mobile-nav-drawer">
       <div class="drawer-panel">
-        <button class="drawer-close" id="mobile-nav-close">✕</button>
+        <button class="drawer-close" id="mobile-nav-close">${ICONS.close}</button>
         ${drawerLink('/admin/admin-dashboard.html', 'Tableau de bord', 'dash')}
         ${drawerLink('/admin/admin-rooms.html', 'Logements', 'rooms')}
         ${drawerLink('/admin/admin-sellers.html', 'Vendeurs', 'sellers')}

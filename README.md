@@ -1,4 +1,4 @@
-# Rentify
+# Lokaya
 
 Site de réservation de logements (chambres, appartements, maisons) avec un second volet immobilier pour l'achat et la location longue durée.
 

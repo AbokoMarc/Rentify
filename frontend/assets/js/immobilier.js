@@ -182,7 +182,7 @@ function renderContactStep() {
     <div class="wizard-question">Souhaitez-vous discuter avec un conseiller avant d'envoyer votre demande ?</div>
     <p style="color:var(--muted-text);font-size:14px;margin-bottom:20px">Tu peux écrire directement à notre conseiller, ou envoyer ta demande maintenant — un conseiller te recontactera de toute façon.</p>
     <div style="display:flex;flex-direction:column;gap:12px">
-      <a href="${whatsappUrl('Demande ' + (kind === 'achat' ? "d'achat" : 'de location') + ' — Rentify')}" target="_blank" rel="noopener" class="btn btn-outline-ink btn-block" id="wizard-contact-admin">💬 Discuter avec un conseiller sur WhatsApp</a>
+      <a href="${whatsappUrl('Demande ' + (kind === 'achat' ? "d'achat" : 'de location') + ' — Lokaya')}" target="_blank" rel="noopener" class="btn btn-outline-ink btn-block" id="wizard-contact-admin">💬 Discuter avec un conseiller sur WhatsApp</a>
       <button class="btn btn-primary btn-block" id="wizard-submit">Envoyer ma demande directement</button>
     </div>
     <div id="wizard-error" style="color:var(--clay);font-size:13px;margin-top:14px;display:none"></div>

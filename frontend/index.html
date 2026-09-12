@@ -3,7 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rentify — Location, achat et réservation au Cameroun</title>
+<title>Lokaya — Trouvez un logement selon votre budget au Cameroun</title>
+<meta name="description" content="Chambres, studios, appartements, maisons et terrains à louer au Cameroun. Trouvez un logement adapté à votre budget à Yaoundé, Douala et partout au pays, en toute confiance.">
+<link rel="canonical" href="https://frontend-woad-gamma-91.vercel.app/index.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Lokaya — Trouvez un logement selon votre budget au Cameroun">
+<meta property="og:description" content="Chambres, studios, appartements et maisons à louer au Cameroun. Recherchez par budget, ville et quartier, en toute confiance.">
+<meta property="og:image" content="https://frontend-woad-gamma-91.vercel.app/assets/img/favicon-512.png">
+<meta property="og:url" content="https://frontend-woad-gamma-91.vercel.app/">
+<meta property="og:site_name" content="Lokaya">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Lokaya — Logements au Cameroun">
+<meta name="twitter:description" content="Trouvez votre logement selon votre budget, partout au Cameroun.">
+<meta name="twitter:image" content="https://frontend-woad-gamma-91.vercel.app/assets/img/favicon-512.png">
 <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
@@ -17,49 +29,48 @@
 
 <section class="hero">
   <div class="container">
-    <span class="eyebrow" style="color:var(--gold)">Rentify</span>
+    <span class="eyebrow" style="color:var(--gold)">Lokaya</span>
     <h1 data-i18n="hero_title">Trouvez votre prochain chez-vous</h1>
-    <p class="lead" data-i18n="hero_lead">Chambres, appartements, maisons et terrains partout au Cameroun. Réservez et payez en toute confiance, en Mobile Money.</p>
+    <p class="lead" data-i18n="hero_lead">Chambres, appartements, maisons et terrains partout au Cameroun. Trouvez un logement selon votre budget, en toute confiance.</p>
 
-    <div style="display:flex;gap:10px;margin-top:22px;flex-wrap:wrap">
-      <select id="f-purpose" style="border-radius:999px;border:1.5px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:white;padding:10px 16px;font-size:14px;font-weight:600">
-        <option value="tourisme" style="color:#000">✈️ Tourisme</option>
-        <option value="affaires" style="color:#000">💼 Voyage d'affaires</option>
-        <option value="etudes" style="color:#000">🎓 Études</option>
-        <option value="demenagement" style="color:#000">📦 Déménagement</option>
-        <option value="autre" style="color:#000">Autre</option>
-      </select>
-      <select id="f-type" style="border-radius:999px;border:1.5px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:white;padding:10px 16px;font-size:14px;font-weight:600">
-        <option value="" style="color:#000">Tous types de logement</option>
-        <option value="chambre" style="color:#000">Chambre privée</option>
-        <option value="appartement" style="color:#000">Appartement</option>
-        <option value="maison" style="color:#000">Maison</option>
-      </select>
-      <select id="f-country" style="border-radius:999px;border:1.5px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:white;padding:10px 16px;font-size:14px;font-weight:600">
-        <option value="" style="color:#000">Tous les pays</option>
-      </select>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:8px">
+      <span data-i18n="trust_verified" style="display:flex;align-items:center;gap:7px;color:rgba(255,255,255,0.85);font-size:13px;font-weight:600">🛡️ Annonces vérifiées</span>
+      <span data-i18n="trust_payment" style="display:flex;align-items:center;gap:7px;color:rgba(255,255,255,0.85);font-size:13px;font-weight:600">💳 Paiement Mobile Money</span>
+      <span data-i18n="trust_local" style="display:flex;align-items:center;gap:7px;color:rgba(255,255,255,0.85);font-size:13px;font-weight:600">🇨🇲 100% pensé pour le Cameroun</span>
     </div>
   </div>
 
   <div class="container">
     <form class="search-card" id="hero-search-form">
       <div class="search-field">
-        <label data-i18n="search_destination">Destination</label>
-        <input type="text" id="f-city" data-i18n-placeholder="search_where" placeholder="Où allez-vous ?" list="city-options" autocomplete="off">
+        <label data-i18n="search_where_label">Où cherchez-vous ?</label>
+        <input type="text" id="f-city" data-i18n-placeholder="search_where" placeholder="Yaoundé, Bastos, Douala..." list="city-options" autocomplete="off">
         <datalist id="city-options"></datalist>
       </div>
       <div class="search-field">
-        <label data-i18n="search_checkin">Arrivée</label>
-        <input type="date" id="f-checkin">
+        <label data-i18n="search_budget_label">Votre budget mensuel</label>
+        <input type="number" id="f-budget" placeholder="Ex : 75 000 FCFA" inputmode="numeric">
       </div>
       <div class="search-field">
-        <label data-i18n="search_checkout">Départ</label>
-        <input type="date" id="f-checkout">
+        <label data-i18n="search_type_label">Type de logement</label>
+        <select id="f-type">
+          <option value="" data-i18n="all_types">Tous types</option>
+          <option value="chambre" data-i18n="cat_rooms">Chambre</option>
+          <option value="studio">Studio</option>
+          <option value="appartement" data-i18n="cat_apartments">Appartement</option>
+          <option value="maison" data-i18n="cat_houses">Maison</option>
+          <option value="terrain">Terrain</option>
+        </select>
       </div>
       <div class="search-submit">
-        <button type="submit" class="btn btn-primary btn-block" data-i18n="search_btn">Rechercher</button>
+        <button type="submit" class="btn btn-primary btn-block" data-i18n="search_submit_full">Trouver mon logement</button>
       </div>
     </form>
+    <div style="text-align:center;margin-top:14px">
+      <a href="/search.html?view=map" data-i18n="explore_map_link" style="color:rgba(255,255,255,0.75);font-size:13px;font-weight:600;text-decoration:underline">Explorer la carte →</a>
+      &nbsp;·&nbsp;
+      <a href="/search.html" data-i18n="advanced_filters_link" style="color:rgba(255,255,255,0.75);font-size:13px;font-weight:600;text-decoration:underline">Filtres avancés</a>
+    </div>
   </div>
 </section>
 
@@ -123,6 +134,7 @@
 </section>
 
 <div id="app-footer"></div>
+<script src="/assets/js/icons.js"></script>
 <script src="/assets/js/api.js"></script>
 <script src="/assets/js/i18n.js"></script>
 <script src="/assets/js/theme.js"></script>

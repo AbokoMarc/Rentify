@@ -1,6 +1,6 @@
 // Liste informative des moyens de paiement pour les transactions immobilières (achat/location d'un bien) —
 // affichage uniquement, ces méthodes-là sont traitées de gré à gré avec le conseiller (contrairement au
-// Mobile Money des réservations courtes, qui lui est intégré et automatisé sur Rentify).
+// Mobile Money des réservations courtes, qui lui est intégré et automatisé sur Lokaya).
 const PAYMENT_METHODS = [
   { icon: '📱', label: 'MTN Mobile Money' },
   { icon: '🧡', label: 'Orange Money' },

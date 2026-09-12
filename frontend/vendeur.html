@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Espace vendeur — Rentify</title>
+<title>Proposer un logement à louer sur Lokaya</title>
+<meta name="description" content="Propose ta chambre, ton studio, ton appartement, ta maison ou ton terrain à la location sur Lokaya. Publication gratuite, chaque annonce est vérifiée avant mise en ligne.">
+<link rel="canonical" href="https://frontend-woad-gamma-91.vercel.app/vendeur.html">
 <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
@@ -18,7 +20,7 @@
 <div class="container" style="padding:32px 24px 60px;max-width:920px">
 
   <div id="seller-guest" class="hidden" style="text-align:center;padding:60px 20px">
-    <h1 style="font-size:26px;margin-bottom:10px">Deviens vendeur sur Rentify</h1>
+    <h1 style="font-size:26px;margin-bottom:10px">Deviens vendeur sur Lokaya</h1>
     <p style="color:var(--muted-text);max-width:480px;margin:0 auto 24px">Connecte-toi ou crée un compte pour proposer tes chambres, appartements, maisons ou terrains.</p>
     <div style="display:flex;gap:12px;justify-content:center">
       <a href="/login.html" class="btn btn-ghost">Se connecter</a>
@@ -27,7 +29,7 @@
   </div>
 
   <div id="seller-become" class="hidden" style="text-align:center;padding:60px 20px">
-    <h1 style="font-size:26px;margin-bottom:10px">Deviens vendeur sur Rentify</h1>
+    <h1 style="font-size:26px;margin-bottom:10px">Deviens vendeur sur Lokaya</h1>
     <p style="color:var(--muted-text);max-width:480px;margin:0 auto 24px">Propose tes logements à la location ou en vente. Chaque annonce est vérifiée par notre équipe avant d'être publiée, pour la confiance des clients.</p>
     <button class="btn btn-dark" id="become-seller-btn">Devenir vendeur</button>
     <div id="become-seller-error" style="color:var(--clay);font-size:13px;margin-top:14px;display:none"></div>
@@ -75,7 +77,15 @@
       <p style="font-size:12px;color:var(--muted-text);margin-top:-8px;margin-bottom:14px">Astuce : cherche l'adresse sur Google Maps, clic droit sur le point exact → les coordonnées s'affichent en premier dans le menu.</p>
       <div class="field"><label>Description</label><textarea id="lm-desc" rows="3" placeholder="Décris le logement, ses atouts, les charges éventuelles..."></textarea></div>
       <div class="field-row">
-        <div class="field"><label>Prix / nuit (FCFA)</label><input type="number" id="lm-price" required placeholder="Ex : 15000"></div>
+        <div class="field"><label>Prix (FCFA)</label><input type="number" id="lm-price" required placeholder="Ex : 15000"></div>
+        <div class="field"><label>Par nuit ou par mois ?</label>
+          <select id="lm-pricing-period"><option value="nuit">Par nuit</option><option value="mois">Par mois</option></select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Meublé ?</label>
+          <select id="lm-furnished"><option value="">Non précisé</option><option value="1">Meublé</option><option value="0">Non meublé</option></select>
+        </div>
         <div class="field"><label>Adultes max</label><input type="number" id="lm-adults" value="2"></div>
       </div>
       <div class="field-row">
@@ -90,6 +100,7 @@
   </div>
 </div>
 
+<script src="/assets/js/icons.js"></script>
 <script src="/assets/js/api.js"></script>
 <script src="/assets/js/i18n.js"></script>
 <script src="/assets/js/theme.js"></script>

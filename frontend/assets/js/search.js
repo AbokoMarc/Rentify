@@ -27,16 +27,17 @@ function roomCardHtml(room) {
   return `
   <a href="/room.html?id=${room.id}" class="room-card">
     <div class="room-img-wrap">
-      <img src="${img}" alt="${escapeHtml(room.title)}">
+      <img src="${img}" alt="${escapeHtml(room.title)} à ${escapeHtml(room.city)}" loading="lazy">
+      <span class="verified-badge" title="Annonce vérifiée par l'équipe Lokaya avant publication">✓ Vérifié</span>
       <span class="room-type-tag">${room.type}</span>
       <button class="fav-btn" data-room="${room.id}" aria-label="Ajouter aux favoris" onclick="event.preventDefault(); toggleFav(${room.id}, this)">♥</button>
     </div>
     <div class="room-body">
       <h3>${escapeHtml(room.title)}</h3>
-      <div class="room-meta">${escapeHtml(room.city)}, ${escapeHtml(room.country)} · ${room.capacity_adults} adultes · ${room.bedrooms} ch.</div>
+      <div class="room-meta">${escapeHtml(room.city)}, ${escapeHtml(room.country)} · ${room.capacity_adults} adultes · ${room.bedrooms} ch.${room.furnished === 1 ? ' · Meublé' : room.furnished === 0 ? ' · Non meublé' : ''}</div>
       ${distanceLabel}
       ${room.reviews_count > 0 ? `<div class="room-rating"><span class="stars">${stars}</span> ${room.rating} (${room.reviews_count})</div>` : `<div class="room-meta">Nouveau logement</div>`}
-      <div class="room-price"><span class="amount">${money(room.price_per_night, { compact: true })}</span><span class="per-night">/ nuit</span></div>
+      <div class="room-price"><span class="amount">${money(room.price_per_night, { compact: true, period: room.pricing_period })}</span></div>
     </div>
   </a>`;
 }
@@ -68,6 +69,8 @@ function fillFiltersFromUrl() {
   if (p.get('min_price')) qs('f-min').value = p.get('min_price');
   if (p.get('max_price')) qs('f-max').value = p.get('max_price');
   if (p.get('adults')) qs('f-adults').value = p.get('adults');
+  if (p.get('pricing_period')) qs('f-period').value = p.get('pricing_period');
+  if (p.get('furnished')) qs('f-furnished').value = p.get('furnished');
   const type = p.get('type') || '';
   document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.toggle('active', btn.dataset.type === type));
   renderCityPills();
@@ -96,7 +99,7 @@ function renderMap(rooms) {
     const marker = L.marker([room.latitude, room.longitude]).addTo(map);
     marker.bindPopup(`
       <div class="map-popup-title">${escapeHtml(room.title)}</div>
-      <div class="map-popup-price">${money(room.price_per_night, { compact: true })} / nuit</div>
+      <div class="map-popup-price">${money(room.price_per_night, { compact: true, period: room.pricing_period })}</div>
       <a class="map-popup-link" href="/room.html?id=${room.id}">Voir le logement →</a>
     `);
     mapMarkers.push(marker);
@@ -183,11 +186,15 @@ qs('apply-filters').addEventListener('click', () => {
   const min = qs('f-min').value;
   const max = qs('f-max').value;
   const adults = qs('f-adults').value;
+  const period = qs('f-period').value;
+  const furnished = qs('f-furnished').value;
   city ? p.set('city', city) : p.delete('city');
   country ? p.set('country', country) : p.delete('country');
   min ? p.set('min_price', min) : p.delete('min_price');
   max ? p.set('max_price', max) : p.delete('max_price');
   adults ? p.set('adults', adults) : p.delete('adults');
+  period ? p.set('pricing_period', period) : p.delete('pricing_period');
+  furnished ? p.set('furnished', furnished) : p.delete('furnished');
   window.history.replaceState(null, '', `/search.html?${p.toString()}`);
   renderCityPills();
   runSearch();

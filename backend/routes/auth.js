@@ -35,7 +35,7 @@ export async function handleAuth(req, res, urlPath) {
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
     if (want_seller) {
       const { notifyAdmins } = await import('../lib/notify.js');
-      await notifyAdmins('nouveau_vendeur', 'Nouveau vendeur à valider', `${user.name} souhaite publier des annonces sur Rentify.`, { user_id: user.id });
+      await notifyAdmins('nouveau_vendeur', 'Nouveau vendeur à valider', `${user.name} souhaite publier des annonces sur Lokaya.`, { user_id: user.id });
     }
     const token = signToken({ id: user.id, role: user.role, name: user.name });
     return json(res, 201, { token, user: publicUser(user) });
@@ -50,7 +50,7 @@ export async function handleAuth(req, res, urlPath) {
     if (user.role === 'vendeur' && user.vendeur_statut === 'en_attente') return json(res, 409, { error: 'Ta demande est déjà en attente de validation.' });
     await db.prepare(`UPDATE users SET role = 'vendeur', vendeur_statut = 'en_attente' WHERE id = ?`).run(authUser.id);
     const { notifyAdmins } = await import('../lib/notify.js');
-    await notifyAdmins('nouveau_vendeur', 'Nouveau vendeur à valider', `${user.name} souhaite publier des annonces sur Rentify.`, { user_id: user.id });
+    await notifyAdmins('nouveau_vendeur', 'Nouveau vendeur à valider', `${user.name} souhaite publier des annonces sur Lokaya.`, { user_id: user.id });
     const updated = await db.prepare('SELECT * FROM users WHERE id = ?').get(authUser.id);
     return json(res, 200, { user: publicUser(updated) });
   }

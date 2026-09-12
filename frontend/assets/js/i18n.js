@@ -7,16 +7,20 @@ const TRANSLATIONS = {
     // Page d'accueil
     hero_title: 'Trouvez votre prochain chez-vous', hero_lead: "Chambres, appartements, maisons et terrains partout au Cameroun. Réservez et payez en toute confiance, en Mobile Money.",
     search_destination: 'Destination', search_where: 'Où allez-vous ?', search_checkin: 'Arrivée', search_checkout: 'Départ', search_btn: 'Rechercher', filter_btn: 'Filtrer',
+    search_where_label: 'Où cherchez-vous ?', search_budget_label: 'Votre budget mensuel', search_type_label: 'Type de logement', search_submit_full: 'Trouver mon logement',
+    trust_verified: '🛡️ Annonces vérifiées', trust_payment: '💳 Paiement Mobile Money', trust_local: '🇨🇲 100% pensé pour le Cameroun',
+    explore_map_link: 'Explorer la carte →', advanced_filters_link: 'Filtres avancés',
+    per_month: '/ mois',
     categories_title: 'Trouvez tous les logements qu\'il vous faut', cat_houses: 'Maisons', cat_apartments: 'Appartements', cat_rooms: 'Chambres privées',
     cities_title: 'Les villes les plus recherchées', featured_title: 'Logements en vedette', see_all: 'Tout voir',
     per_night: '/ nuit', reserve: 'Réserver', all_types: 'Tous types',
     cookie_msg: "Nous utilisons des cookies pour améliorer votre expérience et mesurer l'audience du site.",
     cookie_accept: 'Accepter', cookie_decline: 'Refuser',
-    budget_calc: 'Calculateur budget', nearby: '📍 Près de moi',
+    budget_calc: 'Calculateur budget', nearby: ICONS.pin + ' Près de moi',
     eyebrow_categories: 'Nos catégories', eyebrow_popular: 'Populaire', eyebrow_featured: 'Sélection',
     // Footer
     footer_tagline: "Réservez chambres, appartements et maisons partout au Cameroun. Paiement en Mobile Money. Achat et location de biens accompagnés par nos conseillers.",
-    footer_explore_title: 'Rentify', footer_link_explore: 'Explorer les logements', footer_link_cities: 'Nos villes', footer_link_about: 'À propos',
+    footer_explore_title: 'Lokaya', footer_link_explore: 'Explorer les logements', footer_link_cities: 'Nos villes', footer_link_about: 'À propos',
     footer_support_title: 'Assistance', footer_link_help: "Centre d'aide", footer_link_cancel: 'Annulation', footer_link_contact: 'Contact WhatsApp',
     footer_host_title: 'Devenir vendeur', footer_link_publish: 'Publier une annonce', footer_link_host_resources: 'Ressources vendeurs',
     footer_rights: 'Réservation de logements en toute confiance, au Cameroun',
@@ -37,15 +41,19 @@ const TRANSLATIONS = {
     login: 'Log in', signup: 'Sign up', logout: 'Log out', my_profile: 'My profile', admin_space: 'Admin space',
     hero_title: 'Find your next home', hero_lead: 'Rooms, apartments, houses and land all over Cameroon. Book and pay with confidence, with Mobile Money.',
     search_destination: 'Destination', search_where: 'Where are you going?', search_checkin: 'Check-in', search_checkout: 'Check-out', search_btn: 'Search', filter_btn: 'Filter',
+    search_where_label: 'Where are you looking?', search_budget_label: 'Your monthly budget', search_type_label: 'Property type', search_submit_full: 'Find my home',
+    trust_verified: '🛡️ Verified listings', trust_payment: '💳 Mobile Money payment', trust_local: '🇨🇲 100% built for Cameroon',
+    explore_map_link: 'Explore the map →', advanced_filters_link: 'Advanced filters',
+    per_month: '/ month',
     categories_title: 'Find all the stays you need', cat_houses: 'Houses', cat_apartments: 'Apartments', cat_rooms: 'Private rooms',
     cities_title: 'Most popular cities', featured_title: 'Featured stays', see_all: 'See all',
     per_night: '/ night', reserve: 'Book now', all_types: 'All types',
     cookie_msg: 'We use cookies to improve your experience and measure site traffic.',
     cookie_accept: 'Accept', cookie_decline: 'Decline',
-    budget_calc: 'Budget calculator', nearby: '📍 Near me',
+    budget_calc: 'Budget calculator', nearby: ICONS.pin + ' Near me',
     eyebrow_categories: 'Categories', eyebrow_popular: 'Popular', eyebrow_featured: 'Selection',
     footer_tagline: 'Book rooms, apartments and houses all over Cameroon. Pay with Mobile Money. Buying and renting properties, guided by our advisors.',
-    footer_explore_title: 'Rentify', footer_link_explore: 'Explore stays', footer_link_cities: 'Our cities', footer_link_about: 'About',
+    footer_explore_title: 'Lokaya', footer_link_explore: 'Explore stays', footer_link_cities: 'Our cities', footer_link_about: 'About',
     footer_support_title: 'Support', footer_link_help: 'Help center', footer_link_cancel: 'Cancellation', footer_link_contact: 'WhatsApp contact',
     footer_host_title: 'Become a seller', footer_link_publish: 'List a property', footer_link_host_resources: 'Seller resources',
     footer_rights: 'Booking homes with confidence, in Cameroon',
@@ -61,10 +69,10 @@ const TRANSLATIONS = {
 
 const I18N = {
   current() {
-    const stored = localStorage.getItem('rentify_lang') || localStorage.getItem('roomia_lang');
+    const stored = localStorage.getItem('lokaya_lang') || localStorage.getItem('rentify_lang') || localStorage.getItem('roomia_lang');
     return stored === 'zh' ? 'fr' : (stored || 'fr'); // ancien réglage chinois -> repli propre sur le français
   },
-  set(lang) { localStorage.setItem('rentify_lang', lang); location.reload(); },
+  set(lang) { localStorage.setItem('lokaya_lang', lang); location.reload(); },
   t(key) { return (TRANSLATIONS[this.current()] && TRANSLATIONS[this.current()][key]) || TRANSLATIONS.fr[key] || key; },
   apply(root = document) {
     document.documentElement.lang = this.current();
@@ -77,13 +85,13 @@ const I18N = {
 };
 
 function renderLangSwitcher() {
-  const langs = { fr: '🇫🇷 FR', en: '🇬🇧 EN' };
+  const langs = { fr: 'FR', en: 'EN' };
   const current = I18N.current();
   return `
   <div style="position:relative" id="lang-switcher">
-    <button class="icon-btn" id="lang-btn" style="width:auto;padding:0 12px;border-radius:999px;font-size:13px;font-weight:700">${langs[current]}</button>
+    <button class="icon-btn" id="lang-btn" style="width:auto;padding:0 12px;gap:6px;border-radius:10px;font-size:13px;font-weight:700">${ICONS.globe}${langs[current]}</button>
     <div class="notif-panel hidden" id="lang-panel" style="width:140px;padding:6px">
-      ${Object.entries(langs).map(([code, label]) => `<button class="tab-btn" style="width:100%;text-align:left;padding:10px 12px;${code === current ? 'background:var(--sand-deep)' : ''}" data-lang="${code}">${label}</button>`).join('')}
+      ${Object.entries(langs).map(([code, label]) => `<button class="tab-btn" style="width:100%;text-align:left;padding:10px 12px;display:flex;align-items:center;gap:8px;${code === current ? 'background:var(--sand-deep)' : ''}" data-lang="${code}">${ICONS.globe}${label}</button>`).join('')}
     </div>
   </div>`;
 }

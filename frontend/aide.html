@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Centre d'aide — Lokaya</title>
+<meta name="description" content="Questions fréquentes sur la réservation, le paiement Mobile Money, l'annulation et la vente de logements sur Lokaya.">
+<link rel="canonical" href="https://frontend-woad-gamma-91.vercel.app/aide.html">
+<link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#241A12">
+<link rel="stylesheet" href="/assets/css/style.css">
+<style>
+  .faq-item { border-bottom: 1px solid var(--line); padding: 18px 0; }
+  .faq-item summary { cursor: pointer; font-weight: 700; font-size: 15px; list-style: none; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::after { content: '+'; float: right; font-size: 20px; color: var(--gold-deep); }
+  .faq-item[open] summary::after { content: '−'; }
+  .faq-item p { color: var(--muted-text); margin-top: 10px; line-height: 1.7; font-size: 14px; }
+</style>
+</head>
+<body>
+<div id="app-header"></div>
+
+<section class="hero" style="padding:56px 0 90px">
+  <div class="container">
+    <span class="eyebrow" style="color:var(--gold)">Assistance</span>
+    <h1 style="color:white;font-size:36px">Centre d'aide</h1>
+    <p class="lead" style="margin-bottom:0">Les réponses aux questions les plus fréquentes. Pas trouvé la tienne ? Écris-nous sur WhatsApp.</p>
+  </div>
+</section>
+
+<div class="container" style="max-width:760px;padding:50px 24px 80px">
+
+  <h2 style="font-size:18px;margin-bottom:6px">Réserver un logement</h2>
+  <details class="faq-item"><summary>Comment réserver une chambre ou un appartement ?</summary><p>Recherche par ville ou budget, ouvre l'annonce qui t'intéresse, choisis tes dates et clique sur "Réserver". Tu paies ensuite en Mobile Money pour confirmer.</p></details>
+  <details class="faq-item"><summary>Le numéro du propriétaire est-il visible avant la réservation ?</summary><p>Non, jamais. Le contact se fait uniquement via WhatsApp avec l'équipe Lokaya ou via la messagerie de l'app, pour la sécurité de tous.</p></details>
+  <details class="faq-item"><summary>Puis-je annuler une réservation ?</summary><p>Oui, depuis "Mes réservations" dans ton espace. Les conditions d'annulation (remboursement partiel ou total) dépendent du délai avant la date d'arrivée — elles sont rappelées avant la confirmation de ta réservation.</p></details>
+
+  <h2 style="font-size:18px;margin:32px 0 6px">Paiement</h2>
+  <details class="faq-item"><summary>Quels moyens de paiement sont acceptés ?</summary><p>MTN Mobile Money et Orange Money (paiement automatique et immédiat), ainsi qu'un règlement en cryptomonnaie en option secondaire.</p></details>
+  <details class="faq-item"><summary>Mon paiement Mobile Money n'a pas confirmé, que faire ?</summary><p>Vérifie que tu as bien validé le push reçu sur ton téléphone avec ton code secret. Si le problème persiste au-delà de quelques minutes, contacte-nous sur WhatsApp avec ton numéro de réservation.</p></details>
+
+  <h2 style="font-size:18px;margin:32px 0 6px">Proposer une annonce (vendeurs)</h2>
+  <details class="faq-item"><summary>Comment devenir vendeur sur Lokaya ?</summary><p>Crée un compte, puis va dans "Devenir vendeur" — ta demande est examinée par notre équipe avant validation.</p></details>
+  <details class="faq-item"><summary>Pourquoi mon annonce n'apparaît-elle pas sur le site ?</summary><p>Chaque annonce est vérifiée manuellement avant publication, pour la confiance des clients. Ce délai est généralement court — tu es notifié dès qu'elle est validée ou si elle est refusée (avec le motif).</p></details>
+
+  <div style="margin-top:40px;padding:24px;background:var(--sand-deep);border-radius:var(--radius-md);text-align:center">
+    <h3 style="font-size:16px;margin-bottom:8px">Une autre question ?</h3>
+    <p style="color:var(--muted-text);font-size:14px;margin-bottom:14px">Notre équipe te répond directement sur WhatsApp.</p>
+    <a href="#" id="aide-whatsapp-link" class="btn btn-dark btn-sm">Discuter sur WhatsApp</a>
+  </div>
+</div>
+
+<div id="app-footer"></div>
+
+<script src="/assets/js/icons.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/i18n.js"></script>
+<script src="/assets/js/theme.js"></script>
+<script src="/assets/js/payment-icons.js"></script>
+<script src="/assets/js/layout.js"></script>
+<script src="/assets/js/notifications.js"></script>
+<script>
+mountLayout();
+document.getElementById('aide-whatsapp-link').href = whatsappUrl("Bonjour, j'ai une question sur Lokaya.");
+</script>
+</body>
+</html>

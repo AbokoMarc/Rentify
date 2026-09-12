@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard.html
+Disallow: /checkout.html
+Disallow: /login.html
+Disallow: /signup.html
+
+Sitemap: https://frontend-woad-gamma-91.vercel.app/sitemap.xml

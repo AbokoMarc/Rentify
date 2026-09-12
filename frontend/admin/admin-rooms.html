@@ -2,8 +2,9 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Logements — Admin Rentify</title>
+<title>Logements — Admin Lokaya</title>
 <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
@@ -31,7 +32,7 @@
 
   <div style="overflow-x:auto">
     <table class="responsive-table">
-      <thead><tr><th></th><th>Titre</th><th>Ville / Pays</th><th>Type</th><th>Prix / nuit</th><th>Validation</th><th>Statut</th><th>Actions</th></tr></thead>
+      <thead><tr><th></th><th>Titre</th><th>Ville / Pays</th><th>Type</th><th>Prix</th><th>Validation</th><th>Statut</th><th>Actions</th></tr></thead>
       <tbody id="rooms-tbody"><tr><td colspan="8" style="padding:30px;text-align:center;color:var(--muted-text)">Chargement…</td></tr></tbody>
     </table>
   </div>
@@ -66,7 +67,13 @@
       </div>
       <div class="field"><label>Description</label><textarea id="rm-desc" rows="3"></textarea></div>
       <div class="field-row">
-        <div class="field"><label>Prix / nuit (FCFA)</label><input type="number" id="rm-price" required></div>
+        <div class="field"><label>Prix</label><input type="number" id="rm-price" required></div>
+        <div class="field"><label>Période</label>
+          <select id="rm-pricing-period"><option value="nuit">Par nuit</option><option value="mois">Par mois</option></select>
+        </div>
+        <div class="field"><label>Meublé ?</label>
+          <select id="rm-furnished"><option value="">Non précisé</option><option value="1">Meublé</option><option value="0">Non meublé</option></select>
+        </div>
         <div class="field"><label>Adultes max</label><input type="number" id="rm-adults" value="2"></div>
       </div>
       <div class="field-row">
@@ -86,6 +93,7 @@
   </div>
 </div>
 
+<script src="/assets/js/icons.js"></script>
 <script src="/assets/js/api.js"></script>
 <script src="/assets/js/i18n.js"></script>
 <script src="/assets/js/theme.js"></script>

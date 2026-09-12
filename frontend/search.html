@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Explorer les logements — Rentify</title>
+<title>Chambres, appartements et maisons à louer au Cameroun — Lokaya</title>
+<meta name="description" content="Recherchez des chambres, studios, appartements, maisons et terrains à louer partout au Cameroun. Filtrez par ville, budget, type et équipements sur Lokaya.">
+<link rel="canonical" href="https://frontend-woad-gamma-91.vercel.app/search.html">
 <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
@@ -62,8 +64,18 @@
       <option value="4">4 adultes</option>
       <option value="6">6+ adultes</option>
     </select>
+    <select id="f-period" style="border:1.5px solid var(--line);border-radius:999px;padding:8px 16px;font-size:14px">
+      <option value="">Nuit ou mois</option>
+      <option value="nuit">Par nuit</option>
+      <option value="mois">Par mois</option>
+    </select>
+    <select id="f-furnished" style="border:1.5px solid var(--line);border-radius:999px;padding:8px 16px;font-size:14px">
+      <option value="">Meublé ou non</option>
+      <option value="1">Meublé</option>
+      <option value="0">Non meublé</option>
+    </select>
     <button class="btn btn-dark btn-sm" id="apply-filters" data-i18n="filter_btn">Filtrer</button>
-    <button class="btn btn-outline-ink btn-sm" id="near-me-btn" data-i18n="nearby">📍 Près de moi</button>
+    <button class="btn btn-outline-ink btn-sm" id="near-me-btn" data-i18n-html="nearby" style="display:inline-flex;align-items:center;gap:6px"></button>
   </div>
   <div id="map-view" class="hidden"></div>
 
@@ -75,6 +87,7 @@
 </div>
 
 <div id="app-footer"></div>
+<script src="/assets/js/icons.js"></script>
 <script src="/assets/js/api.js"></script>
 <script src="/assets/js/i18n.js"></script>
 <script src="/assets/js/theme.js"></script>

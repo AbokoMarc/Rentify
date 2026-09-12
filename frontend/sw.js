@@ -1,14 +1,14 @@
-// Service worker Rentify — uniquement pour les notifications Web Push (pas de cache offline).
+// Service worker Lokaya — uniquement pour les notifications Web Push (pas de cache offline).
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
 
 self.addEventListener('push', (event) => {
-  let payload = { title: 'Rentify', body: 'Nouvelle notification.', data: {} };
+  let payload = { title: 'Lokaya', body: 'Nouvelle notification.', data: {} };
   try { payload = event.data ? event.data.json() : payload; } catch { /* payload texte brut, on garde les valeurs par défaut */ }
 
   event.waitUntil(
-    self.registration.showNotification(payload.title || 'Rentify', {
+    self.registration.showNotification(payload.title || 'Lokaya', {
       body: payload.body,
       icon: '/assets/img/favicon-192.png',
       badge: '/assets/img/favicon-96.png',

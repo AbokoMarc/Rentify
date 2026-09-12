@@ -14,7 +14,7 @@ export function isPushConfigured() {
 
 if (isPushConfigured()) {
   webpush.setVapidDetails(
-    `mailto:${process.env.VAPID_CONTACT_EMAIL || 'admin@rentify.cm'}`,
+    `mailto:${process.env.VAPID_CONTACT_EMAIL || 'admin@lokaya.cm'}`,
     process.env.VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY
   );

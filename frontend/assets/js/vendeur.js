@@ -48,7 +48,7 @@ function listingCard(r) {
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <strong>${escapeHtml(r.title)}</strong>${approvalBadge(r.approval_status)}
       </div>
-      <div style="font-size:13px;color:var(--muted-text);margin-top:4px">${escapeHtml(r.city)} · ${money(r.price_per_night, { compact: true })} / nuit</div>
+      <div style="font-size:13px;color:var(--muted-text);margin-top:4px">${escapeHtml(r.city)} · ${money(r.price_per_night, { compact: true, period: r.pricing_period })}${r.furnished === 1 ? ' · Meublé' : r.furnished === 0 ? ' · Non meublé' : ''}</div>
       ${r.rejection_reason ? `<div style="font-size:12px;color:var(--clay);margin-top:4px">Motif du refus : ${escapeHtml(r.rejection_reason)}</div>` : ''}
     </div>
     <div style="display:flex;gap:8px;flex-shrink:0">
@@ -83,6 +83,8 @@ function openListingModal(room = null) {
   qs('lm-lng').value = room?.longitude ?? '';
   qs('lm-desc').value = room?.description || '';
   qs('lm-price').value = room?.price_per_night ?? '';
+  qs('lm-pricing-period').value = room?.pricing_period || 'nuit';
+  qs('lm-furnished').value = room?.furnished === 1 ? '1' : room?.furnished === 0 ? '0' : '';
   qs('lm-adults').value = room?.capacity_adults ?? 2;
   qs('lm-bedrooms').value = room?.bedrooms ?? 1;
   qs('lm-bathrooms').value = room?.bathrooms ?? 1;
@@ -122,6 +124,8 @@ qs('listing-form').addEventListener('submit', async (e) => {
     longitude: qs('lm-lng').value ? Number(qs('lm-lng').value) : null,
     description: qs('lm-desc').value.trim(),
     price_per_night: Number(qs('lm-price').value),
+    pricing_period: qs('lm-pricing-period').value,
+    furnished: qs('lm-furnished').value === '' ? null : Number(qs('lm-furnished').value),
     capacity_adults: Number(qs('lm-adults').value),
     bedrooms: Number(qs('lm-bedrooms').value),
     bathrooms: Number(qs('lm-bathrooms').value),

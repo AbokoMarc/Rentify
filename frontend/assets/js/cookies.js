@@ -1,5 +1,5 @@
 function initCookieBanner() {
-  if (localStorage.getItem('rentify_cookie_consent')) return;
+  if (localStorage.getItem('lokaya_cookie_consent')) return;
   const bar = document.createElement('div');
   bar.id = 'cookie-banner';
   bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:600;background:var(--ink-deep);color:white;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;box-shadow:0 -4px 20px rgba(0,0,0,0.2)';
@@ -13,11 +13,11 @@ function initCookieBanner() {
   if (typeof I18N !== 'undefined') I18N.apply();
 
   document.getElementById('cookie-accept').addEventListener('click', () => {
-    localStorage.setItem('rentify_cookie_consent', 'accepted');
+    localStorage.setItem('lokaya_cookie_consent', 'accepted');
     bar.remove();
   });
   document.getElementById('cookie-decline').addEventListener('click', () => {
-    localStorage.setItem('rentify_cookie_consent', 'declined');
+    localStorage.setItem('lokaya_cookie_consent', 'declined');
     bar.remove();
   });
 }

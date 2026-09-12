@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Politique d'annulation — Lokaya</title>
+<meta name="description" content="Conditions d'annulation et de remboursement des réservations sur Lokaya.">
+<link rel="canonical" href="https://frontend-woad-gamma-91.vercel.app/annulation.html">
+<link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#241A12">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div id="app-header"></div>
+
+<section class="hero" style="padding:56px 0 90px">
+  <div class="container">
+    <span class="eyebrow" style="color:var(--gold)">Assistance</span>
+    <h1 style="color:white;font-size:36px">Politique d'annulation</h1>
+    <p class="lead" style="margin-bottom:0">Des règles simples et les mêmes pour tout le monde.</p>
+  </div>
+</section>
+
+<div class="container" style="max-width:760px;padding:50px 24px 80px;line-height:1.8">
+  <div class="grid" style="gap:16px;margin-bottom:32px">
+    <div style="background:white;border-radius:var(--radius-md);box-shadow:var(--shadow-card);padding:20px">
+      <h3 style="font-size:16px;color:var(--forest)">Plus de 72h avant l'arrivée</h3>
+      <p style="color:var(--muted-text);font-size:14px;margin-top:6px">Remboursement intégral, hors frais de service éventuels.</p>
+    </div>
+    <div style="background:white;border-radius:var(--radius-md);box-shadow:var(--shadow-card);padding:20px">
+      <h3 style="font-size:16px;color:var(--gold-deep)">Entre 24h et 72h avant l'arrivée</h3>
+      <p style="color:var(--muted-text);font-size:14px;margin-top:6px">Remboursement à 50% du montant payé.</p>
+    </div>
+    <div style="background:white;border-radius:var(--radius-md);box-shadow:var(--shadow-card);padding:20px">
+      <h3 style="font-size:16px;color:var(--clay)">Moins de 24h avant l'arrivée / no-show</h3>
+      <p style="color:var(--muted-text);font-size:14px;margin-top:6px">Aucun remboursement — le logement était bloqué pour toi sur cette période.</p>
+    </div>
+  </div>
+
+  <h2 style="font-size:20px;margin-bottom:12px">Comment annuler</h2>
+  <p style="color:var(--ink-text);margin-bottom:24px">Depuis ton espace ("Mes réservations"), ouvre la réservation concernée et clique sur "Annuler". Le remboursement, si applicable, est traité en Mobile Money sous quelques jours ouvrés.</p>
+
+  <h2 style="font-size:20px;margin-bottom:12px">Cas particuliers</h2>
+  <p style="color:var(--ink-text);margin-bottom:24px">Si le logement ne correspond pas à l'annonce, ou en cas d'urgence justifiée, contacte notre équipe sur WhatsApp — chaque situation est étudiée au cas par cas.</p>
+
+  <div style="margin-top:20px;padding:24px;background:var(--sand-deep);border-radius:var(--radius-md);text-align:center">
+    <a href="#" id="annulation-whatsapp-link" class="btn btn-dark btn-sm">Contacter l'équipe sur WhatsApp</a>
+  </div>
+</div>
+
+<div id="app-footer"></div>
+
+<script src="/assets/js/icons.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/i18n.js"></script>
+<script src="/assets/js/theme.js"></script>
+<script src="/assets/js/payment-icons.js"></script>
+<script src="/assets/js/layout.js"></script>
+<script src="/assets/js/notifications.js"></script>
+<script>
+mountLayout();
+document.getElementById('annulation-whatsapp-link').href = whatsappUrl("Bonjour, j'ai une question sur l'annulation d'une réservation.");
+</script>
+</body>
+</html>

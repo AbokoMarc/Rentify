@@ -17,7 +17,8 @@ function roomCardHtml(room) {
   return `
   <a href="/room.html?id=${room.id}" class="room-card">
     <div class="room-img-wrap">
-      <img src="${img}" alt="${escapeHtml(room.title)}">
+      <img src="${img}" alt="${escapeHtml(room.title)} à ${escapeHtml(room.city)}" loading="lazy">
+      <span class="verified-badge" title="Annonce vérifiée par l'équipe Lokaya avant publication">✓ Vérifié</span>
       <span class="room-type-tag">${room.type}</span>
       <button class="fav-btn" data-room="${room.id}" aria-label="Ajouter aux favoris" onclick="event.preventDefault(); toggleFav(${room.id}, this)">♥</button>
     </div>
@@ -25,7 +26,7 @@ function roomCardHtml(room) {
       <h3>${escapeHtml(room.title)}</h3>
       <div class="room-meta">${escapeHtml(room.city)} · ${room.capacity_adults} adultes · ${room.bedrooms} ch.</div>
       ${room.reviews_count > 0 ? `<div class="room-rating"><span class="stars">${stars}</span> ${room.rating} (${room.reviews_count})</div>` : `<div class="room-meta">Nouveau logement</div>`}
-      <div class="room-price"><span class="amount">${money(room.price_per_night, { compact: true })}</span><span class="per-night">/ nuit</span></div>
+      <div class="room-price"><span class="amount">${money(room.price_per_night, { compact: true, period: room.pricing_period })}</span></div>
     </div>
   </a>`;
 }
@@ -73,33 +74,17 @@ async function loadFeatured() {
   } catch (err) { qs('featured-grid').innerHTML = `<div class="empty-state">Impossible de charger les logements.</div>`; }
 }
 
-async function loadCountries() {
-  try {
-    const { countries } = await api('/rooms/countries', { auth: false });
-    const sel = qs('f-country');
-    sel.innerHTML = '<option value="" style="color:#000">Tous les pays</option>' +
-      countries.map(c => `<option value="${escapeHtml(c.country)}" style="color:#000">${escapeHtml(c.country)} (${c.count})</option>`).join('');
-  } catch { /* silencieux */ }
-}
-
 qs('hero-search-form').addEventListener('submit', (e) => {
   e.preventDefault();
   const params = new URLSearchParams();
   const city = qs('f-city').value.trim();
-  const checkin = qs('f-checkin').value;
-  const checkout = qs('f-checkout').value;
-  const purpose = qs('f-purpose').value;
+  const budget = qs('f-budget').value;
   const type = qs('f-type').value;
-  const country = qs('f-country').value;
   if (city) params.set('city', city);
-  if (checkin) params.set('check_in', checkin);
-  if (checkout) params.set('check_out', checkout);
-  if (purpose) params.set('purpose', purpose);
+  if (budget) params.set('max_price', budget);
   if (type) params.set('type', type);
-  if (country) params.set('country', country);
   window.location.href = `/search.html?${params.toString()}`;
 });
 
 loadCities();
-loadCountries();
 loadFeatured();

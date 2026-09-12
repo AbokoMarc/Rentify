@@ -69,7 +69,7 @@ const rooms = [
 
 const existing = (await db.prepare('SELECT COUNT(*) c FROM rooms').get()).c;
 if (existing > 0) {
-  console.log(`ℹ️  ${existing} logement(s) déjà en base — seed ignoré (supprime data/rentify.db pour reseed).`);
+  console.log(`ℹ️  ${existing} logement(s) déjà en base — seed ignoré (supprime data/lokaya.db pour reseed).`);
 } else {
   const insert = db.prepare(`
     INSERT INTO rooms (title, type, description, city, country, address, latitude, longitude, price_per_night,

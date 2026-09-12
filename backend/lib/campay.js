@@ -49,7 +49,7 @@ export async function collectCampayPayment({ amount, phone, description, externa
       amount: String(Math.round(amount)), // FCFA, entier — pas de décimales
       currency: 'XAF',
       from: normalizeCmPhone(phone),
-      description: description || 'Paiement Rentify',
+      description: description || 'Paiement Lokaya',
       external_reference: externalReference,
     }),
   });

@@ -34,8 +34,8 @@ function openBudgetCalculator() {
   overlay.id = 'budget-modal';
   overlay.innerHTML = `
     <div class="modal">
-      <button class="modal-close" id="budget-close">✕</button>
-      <h2>💰 Calculateur de budget</h2>
+      <button class="modal-close" id="budget-close">${ICONS.close}</button>
+      <h2 style="display:flex;align-items:center;gap:8px">${ICONS.wallet} Calculateur de budget</h2>
       <p class="modal-sub">Indiquez votre budget total, on vous suggère la bonne gamme de prix par nuit.</p>
       <div class="field"><label>Budget total (FCFA)</label><input type="number" id="bc-total" placeholder="Ex : 100000"></div>
       <div class="field"><label>Nombre de nuits</label><input type="number" id="bc-nights" placeholder="Ex : 4"></div>

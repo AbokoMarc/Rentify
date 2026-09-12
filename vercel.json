@@ -6,6 +6,10 @@
       "destination": "https://rentify-6yiw.onrender.com/api/:path*"
     },
     {
+      "source": "/sitemap.xml",
+      "destination": "https://rentify-6yiw.onrender.com/api/sitemap.xml"
+    },
+    {
       "source": "/admin/:path*",
       "destination": "/frontend/admin/:path*"
     },

@@ -4,7 +4,7 @@ import { hashPassword } from './lib/auth.js';
 export async function bootstrapAdmin() {
   const email = process.env.ADMIN_EMAIL;
   const password = process.env.ADMIN_PASSWORD;
-  const name = process.env.ADMIN_NAME || 'Administrateur Rentify';
+  const name = process.env.ADMIN_NAME || 'Administrateur Lokaya';
 
   if (!email || !password) {
     console.warn('⚠️  ADMIN_EMAIL / ADMIN_PASSWORD absents du .env — aucun compte admin créé automatiquement.');

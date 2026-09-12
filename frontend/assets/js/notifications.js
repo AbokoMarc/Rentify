@@ -90,7 +90,7 @@ function initNotificationBell() {
       const meta = NOTIF_LABELS[notif.type] || { icon: '🔔', cls: '' };
       showToast(`${meta.icon} ${notif.title}`, notif.message, meta.cls);
       refreshBadgeAndList();
-      window.dispatchEvent(new CustomEvent('rentify:notification', { detail: notif }));
+      window.dispatchEvent(new CustomEvent('lokaya:notification', { detail: notif }));
     });
     es.onerror = () => { /* le navigateur retente automatiquement */ };
   }

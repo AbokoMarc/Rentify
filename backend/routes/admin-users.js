@@ -102,7 +102,7 @@ export async function handleAdminUsers(req, res, urlPath) {
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(approveSellerMatch[1]);
     if (!user) return notFound(res);
     await db.prepare(`UPDATE users SET vendeur_statut = 'approuve' WHERE id = ?`).run(approveSellerMatch[1]);
-    await notifyClient(user.id, 'vendeur_valide', 'Compte vendeur validé ✅', 'Tu peux maintenant proposer des annonces sur Rentify.', {});
+    await notifyClient(user.id, 'vendeur_valide', 'Compte vendeur validé ✅', 'Tu peux maintenant proposer des annonces sur Lokaya.', {});
     return json(res, 200, { success: true });
   }
 
@@ -113,7 +113,7 @@ export async function handleAdminUsers(req, res, urlPath) {
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(rejectSellerMatch[1]);
     if (!user) return notFound(res);
     await db.prepare(`UPDATE users SET role = 'client', vendeur_statut = 'rejete' WHERE id = ?`).run(rejectSellerMatch[1]);
-    await notifyClient(user.id, 'vendeur_rejete', 'Demande vendeur refusée', "Ta demande pour publier des annonces sur Rentify n'a pas été retenue.", {});
+    await notifyClient(user.id, 'vendeur_rejete', 'Demande vendeur refusée', "Ta demande pour publier des annonces sur Lokaya n'a pas été retenue.", {});
     return json(res, 200, { success: true });
   }
 
