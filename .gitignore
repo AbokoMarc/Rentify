@@ -3,3 +3,6 @@ backend/data/
 backend/.env
 *.log
 .DS_Store
+
+.vercel
+.env*
