@@ -132,13 +132,14 @@ export async function handleRooms(req, res, urlPath, urlObj) {
     const b = await parseBody(req);
     if (!b.title || !b.city || !b.price_per_night) return json(res, 400, { error: 'Titre, ville et prix requis.' });
     const info = await db.prepare(`
-      INSERT INTO rooms (title, type, description, city, country, address, latitude, longitude, price_per_night, pricing_period, furnished,
+      INSERT INTO rooms (title, type, description, city, country, address, latitude, longitude, price_per_night, pricing_period, furnished, rental_terms,
         capacity_adults, capacity_children, bedrooms, beds, bathrooms, amenities, images, status, owner_id, approval_status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'disponible', ?, 'en_attente')
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'disponible', ?, 'en_attente')
     `).run(
       b.title, b.type || 'chambre', b.description || '', b.city, b.country || 'Cameroun', b.address || '',
       b.latitude != null ? Number(b.latitude) : null, b.longitude != null ? Number(b.longitude) : null,
       Number(b.price_per_night), b.pricing_period === 'mois' ? 'mois' : 'nuit', b.furnished != null ? Number(b.furnished) : null,
+      b.rental_terms || null,
       Number(b.capacity_adults || 2), Number(b.capacity_children || 0),
       Number(b.bedrooms || 1), Number(b.beds || 1), Number(b.bathrooms || 1),
       JSON.stringify(b.amenities || []), JSON.stringify(b.images || []), seller.id
@@ -157,7 +158,7 @@ export async function handleRooms(req, res, urlPath, urlObj) {
     if (!room || room.owner_id !== seller.id) return notFound(res);
     const b = await parseBody(req);
     await db.prepare(`
-      UPDATE rooms SET title=?, type=?, description=?, city=?, address=?, latitude=?, longitude=?, price_per_night=?, pricing_period=?, furnished=?,
+      UPDATE rooms SET title=?, type=?, description=?, city=?, address=?, latitude=?, longitude=?, price_per_night=?, pricing_period=?, furnished=?, rental_terms=?,
         capacity_adults=?, capacity_children=?, bedrooms=?, beds=?, bathrooms=?,
         amenities=?, images=?, status=?, approval_status='en_attente', rejection_reason=NULL, updated_at=datetime('now')
       WHERE id = ?
@@ -169,6 +170,7 @@ export async function handleRooms(req, res, urlPath, urlObj) {
       b.price_per_night != null ? Number(b.price_per_night) : room.price_per_night,
       b.pricing_period === 'mois' || b.pricing_period === 'nuit' ? b.pricing_period : room.pricing_period,
       b.furnished != null ? Number(b.furnished) : room.furnished,
+      b.rental_terms !== undefined ? b.rental_terms : room.rental_terms,
       b.capacity_adults != null ? Number(b.capacity_adults) : room.capacity_adults,
       b.capacity_children != null ? Number(b.capacity_children) : room.capacity_children,
       b.bedrooms != null ? Number(b.bedrooms) : room.bedrooms,
@@ -245,13 +247,14 @@ export async function handleRooms(req, res, urlPath, urlObj) {
     const b = await parseBody(req);
     if (!b.title || !b.city || !b.price_per_night) return json(res, 400, { error: 'Titre, ville et prix requis.' });
     const info = await db.prepare(`
-      INSERT INTO rooms (title, type, description, city, country, address, latitude, longitude, price_per_night, pricing_period, furnished,
+      INSERT INTO rooms (title, type, description, city, country, address, latitude, longitude, price_per_night, pricing_period, furnished, rental_terms,
         capacity_adults, capacity_children, bedrooms, beds, bathrooms, amenities, images, status, featured, approval_status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approuve')
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approuve')
     `).run(
       b.title, b.type || 'chambre', b.description || '', b.city, b.country || 'Cameroun', b.address || '',
       b.latitude != null ? Number(b.latitude) : null, b.longitude != null ? Number(b.longitude) : null,
       Number(b.price_per_night), b.pricing_period === 'mois' ? 'mois' : 'nuit', b.furnished != null ? Number(b.furnished) : null,
+      b.rental_terms || null,
       Number(b.capacity_adults || 2), Number(b.capacity_children || 0),
       Number(b.bedrooms || 1), Number(b.beds || 1), Number(b.bathrooms || 1),
       JSON.stringify(b.amenities || []), JSON.stringify(b.images || []),
@@ -269,7 +272,7 @@ export async function handleRooms(req, res, urlPath, urlObj) {
     if (!room) return notFound(res);
     const b = await parseBody(req);
     await db.prepare(`
-      UPDATE rooms SET title=?, type=?, description=?, city=?, country=?, address=?, latitude=?, longitude=?, price_per_night=?, pricing_period=?, furnished=?,
+      UPDATE rooms SET title=?, type=?, description=?, city=?, country=?, address=?, latitude=?, longitude=?, price_per_night=?, pricing_period=?, furnished=?, rental_terms=?,
         capacity_adults=?, capacity_children=?, bedrooms=?, beds=?, bathrooms=?,
         amenities=?, images=?, status=?, featured=?, updated_at=datetime('now')
       WHERE id = ?
@@ -281,6 +284,7 @@ export async function handleRooms(req, res, urlPath, urlObj) {
       b.price_per_night != null ? Number(b.price_per_night) : room.price_per_night,
       b.pricing_period === 'mois' || b.pricing_period === 'nuit' ? b.pricing_period : room.pricing_period,
       b.furnished != null ? Number(b.furnished) : room.furnished,
+      b.rental_terms !== undefined ? b.rental_terms : room.rental_terms,
       b.capacity_adults != null ? Number(b.capacity_adults) : room.capacity_adults,
       b.capacity_children != null ? Number(b.capacity_children) : room.capacity_children,
       b.bedrooms != null ? Number(b.bedrooms) : room.bedrooms,

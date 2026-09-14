@@ -20,12 +20,19 @@
   <h1 style="font-size:26px;margin-bottom:20px">Mon espace</h1>
   <div class="tabs">
     <button class="tab-btn active" data-tab="bookings" data-i18n="nav_bookings">Mes réservations</button>
+    <button class="tab-btn" data-tab="demandes">Mes demandes immo</button>
     <button class="tab-btn" data-tab="favoris" id="favoris-tab-btn" data-i18n="nav_favorites">Favoris</button>
     <button class="tab-btn" data-tab="profil" data-i18n="my_profile">Profil</button>
   </div>
 
   <div id="tab-bookings">
     <div class="grid" id="bookings-list" style="grid-template-columns:1fr;gap:16px">
+      <div class="skeleton" style="height:100px"></div>
+    </div>
+  </div>
+
+  <div id="tab-demandes" class="hidden">
+    <div class="grid" id="demandes-list" style="grid-template-columns:1fr;gap:16px">
       <div class="skeleton" style="height:100px"></div>
     </div>
   </div>

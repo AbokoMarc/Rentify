@@ -1,6 +1,7 @@
 mountAdminLayout('rooms');
 
 let allRooms = [];
+let imageUploaderWidget = null;
 
 function statusBadgeHtml(status) {
   return status === 'disponible'
@@ -72,7 +73,8 @@ function openModal(room = null) {
   qs('rm-beds').value = room?.beds ?? 1;
   qs('rm-bathrooms').value = room?.bathrooms ?? 1;
   qs('rm-amenities').value = (room?.amenities || []).join(', ');
-  qs('rm-images').value = (room?.images || []).join('\n');
+  qs('rm-terms').value = room?.rental_terms || '';
+  imageUploaderWidget = mountImageUploader('rm-image-uploader', room?.images || [], () => {});
   qs('rm-featured').checked = !!room?.featured;
   qs('room-form-error').style.display = 'none';
   qs('room-modal-overlay').classList.remove('hidden');
@@ -142,7 +144,8 @@ qs('room-form').addEventListener('submit', async (e) => {
     beds: Number(qs('rm-beds').value),
     bathrooms: Number(qs('rm-bathrooms').value),
     amenities: qs('rm-amenities').value.split(',').map(s => s.trim()).filter(Boolean),
-    images: qs('rm-images').value.split('\n').map(s => s.trim()).filter(Boolean),
+    rental_terms: qs('rm-terms').value.trim() || null,
+    images: imageUploaderWidget ? imageUploaderWidget.getImages() : [],
     featured: qs('rm-featured').checked,
   };
   const btn = qs('room-form-submit');

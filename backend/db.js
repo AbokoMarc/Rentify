@@ -100,6 +100,7 @@ await db.exec(`
     price_per_night REAL NOT NULL, -- nom historique de la colonne ; voir pricing_period pour son unité réelle (nuit ou mois)
     pricing_period TEXT NOT NULL DEFAULT 'nuit', -- nuit | mois — période à laquelle s'applique price_per_night
     furnished INTEGER, -- 1 = meublé, 0 = non meublé, NULL = non précisé (pertinent pour location longue durée)
+    rental_terms TEXT, -- conditions particulières écrites par le vendeur (caution, règles, etc.) — le client doit les accepter avant de payer
     capacity_adults INTEGER NOT NULL DEFAULT 2,
     capacity_children INTEGER NOT NULL DEFAULT 0,
     bedrooms INTEGER NOT NULL DEFAULT 1,
@@ -130,6 +131,8 @@ await db.exec(`
     travel_purpose TEXT DEFAULT 'tourisme', -- tourisme | affaires | etudes | demenagement | autre
     status TEXT NOT NULL DEFAULT 'en_attente', -- en_attente | confirmee | annulee | terminee
     special_requests TEXT,
+    accepted_terms TEXT, -- copie figée des conditions du bailleur au moment de l'acceptation (même si le vendeur les modifie ensuite)
+    terms_accepted_at TEXT, -- horodatage de l'acceptation par le client, avant paiement
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 

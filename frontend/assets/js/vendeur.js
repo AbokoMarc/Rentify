@@ -1,6 +1,7 @@
 mountLayout('vendeur');
 
 let myListings = [];
+let imageUploaderWidget = null;
 
 function showSellerState() {
   const user = Auth.getUser();
@@ -89,7 +90,8 @@ function openListingModal(room = null) {
   qs('lm-bedrooms').value = room?.bedrooms ?? 1;
   qs('lm-bathrooms').value = room?.bathrooms ?? 1;
   qs('lm-amenities').value = (room?.amenities || []).join(', ');
-  qs('lm-images').value = (room?.images || []).join('\n');
+  qs('lm-terms').value = room?.rental_terms || '';
+  imageUploaderWidget = mountImageUploader('lm-image-uploader', room?.images || [], () => {});
   qs('listing-form-error').style.display = 'none';
   qs('listing-modal-overlay').classList.remove('hidden');
 }
@@ -130,7 +132,8 @@ qs('listing-form').addEventListener('submit', async (e) => {
     bedrooms: Number(qs('lm-bedrooms').value),
     bathrooms: Number(qs('lm-bathrooms').value),
     amenities: qs('lm-amenities').value.split(',').map(s => s.trim()).filter(Boolean),
-    images: qs('lm-images').value.split('\n').map(s => s.trim()).filter(Boolean),
+    rental_terms: qs('lm-terms').value.trim() || null,
+    images: imageUploaderWidget ? imageUploaderWidget.getImages() : [],
   };
   const btn = qs('listing-form-submit');
   btn.disabled = true; btn.textContent = 'Envoi…';

@@ -85,7 +85,8 @@
         <div class="field"><label>Salles de bain</label><input type="number" id="rm-bathrooms" value="1"></div>
       </div>
       <div class="field"><label>Équipements (séparés par des virgules)</label><input type="text" id="rm-amenities" placeholder="Wifi, Climatisation, Parking"></div>
-      <div class="field"><label>URLs des photos (une par ligne)</label><textarea id="rm-images" rows="3" placeholder="https://..."></textarea></div>
+      <div class="field"><label>Conditions particulières (optionnel)</label><textarea id="rm-terms" rows="3" placeholder="Ex : Caution d'un mois exigée..."></textarea></div>
+      <div class="field"><label>Photos</label><div id="rm-image-uploader"></div></div>
       <div class="field"><label><input type="checkbox" id="rm-featured" style="width:auto;margin-right:8px">Mettre en avant sur la page d'accueil</label></div>
       <div id="room-form-error" style="color:var(--clay);font-size:13px;margin-bottom:10px;display:none"></div>
       <button type="submit" class="btn btn-primary btn-block" id="room-form-submit">Enregistrer</button>
@@ -100,6 +101,7 @@
 <script src="/assets/js/payment-icons.js"></script>
 <script src="/assets/js/layout.js"></script>
 <script src="/assets/js/notifications.js"></script>
+<script src="/assets/js/imageuploader.js"></script>
 <script src="/assets/js/admin-rooms.js"></script>
 </body>
 </html>

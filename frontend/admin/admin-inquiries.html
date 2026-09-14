@@ -139,10 +139,18 @@ qs('inquiries-tbody').addEventListener('click', (e) => {
     <p><strong>${escapeHtml(inquiry.client_name)}</strong> — ${escapeHtml(inquiry.client_email)}${inquiry.client_phone ? ' · ' + escapeHtml(inquiry.client_phone) : ''}</p>
     <p style="margin-top:4px"><span class="kind-tag kind-${inquiry.kind}">${inquiry.kind === 'achat' ? 'Achat' : 'Location'}</span> ${inquiry.wants_admin_contact ? '<span class="badge badge-confirmee" style="margin-left:8px">Souhaite être contacté</span>' : ''}</p>
     <div style="margin-top:16px">${rows}</div>
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn btn-primary btn-sm" data-set-status="en_discussion" data-id="${inquiry.id}">Marquer en discussion</button>
+    ${inquiry.admin_note ? `<div style="margin-top:16px;padding:12px;background:var(--sand-deep);border-radius:var(--radius-sm);font-size:13px"><strong>Dernière réponse envoyée :</strong> ${escapeHtml(inquiry.admin_note)}</div>` : ''}
+
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line)">
+      <label style="font-size:13px;font-weight:700;display:block;margin-bottom:6px">Répondre au client (reçu directement dans son espace Lokaya)</label>
+      <textarea id="reply-message" rows="3" style="width:100%;border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:10px;font-family:inherit;font-size:14px" placeholder="Ex : Bonjour, nous avons bien reçu votre demande, un conseiller vous contacte sous 24h..."></textarea>
+      <button class="btn btn-primary btn-sm" id="send-reply-btn" data-id="${inquiry.id}" style="margin-top:8px">Envoyer la réponse dans l'app</button>
+    </div>
+
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn btn-dark btn-sm" data-set-status="traite" data-id="${inquiry.id}">Marquer traité</button>
-      <a href="mailto:${escapeHtml(inquiry.client_email)}" class="btn btn-ghost btn-sm">Écrire au client</a>
+      <a href="mailto:${escapeHtml(inquiry.client_email)}" class="btn btn-ghost btn-sm">✉️ Écrire par email</a>
+      ${inquiry.client_phone ? `<a href="https://wa.me/${inquiry.client_phone.replace(/\D/g, '')}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">💬 Écrire sur WhatsApp</a>` : ''}
     </div>
   `;
   qs('detail-overlay').classList.remove('hidden');
@@ -152,10 +160,23 @@ qs('detail-close').addEventListener('click', () => qs('detail-overlay').classLis
 
 qs('detail-body').addEventListener('click', async (e) => {
   const status = e.target.dataset.setStatus;
-  const id = e.target.dataset.id;
+  const replyId = e.target.dataset.id && e.target.id === 'send-reply-btn' ? e.target.dataset.id : null;
+
+  if (replyId) {
+    const message = qs('reply-message').value.trim();
+    if (!message) { showToast('Message vide', 'Écris une réponse avant d\\'envoyer.', 'warn'); return; }
+    try {
+      await api(`/admin/inquiries/${replyId}/reply`, { method: 'PUT', body: { message } });
+      showToast('Réponse envoyée', 'Le client la voit immédiatement dans ses notifications.', 'success');
+      qs('detail-overlay').classList.add('hidden');
+      loadInquiries();
+    } catch (err) { showToast('Erreur', err.message, 'warn'); }
+    return;
+  }
+
   if (!status) return;
   try {
-    await api(`/admin/inquiries/${id}/status`, { method: 'PUT', body: { status } });
+    await api(`/admin/inquiries/${e.target.dataset.id}/status`, { method: 'PUT', body: { status } });
     showToast('Mis à jour', 'Statut de la demande modifié.', 'success');
     qs('detail-overlay').classList.add('hidden');
     loadInquiries();

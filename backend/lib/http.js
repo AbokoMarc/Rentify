@@ -11,7 +11,7 @@ export function parseBody(req) {
     let body = '';
     req.on('data', chunk => {
       body += chunk;
-      if (body.length > 10 * 1024 * 1024) req.destroy(); // 10MB max
+      if (body.length > 15 * 1024 * 1024) req.destroy(); // 15MB max (marge pour plusieurs photos compressées en base64)
     });
     req.on('end', () => {
       if (!body) return resolve({});

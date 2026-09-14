@@ -93,7 +93,10 @@
         <div class="field"><label>Salles de bain</label><input type="number" id="lm-bathrooms" value="1"></div>
       </div>
       <div class="field"><label>Équipements (séparés par des virgules)</label><input type="text" id="lm-amenities" placeholder="Wifi, Climatisation, Groupe électrogène, Parking"></div>
-      <div class="field"><label>URLs des photos (une par ligne)</label><textarea id="lm-images" rows="3" placeholder="https://..."></textarea></div>
+      <div class="field"><label>Conditions particulières (optionnel)</label><textarea id="lm-terms" rows="3" placeholder="Ex : Caution d'un mois exigée. Pas d'animaux. Visite obligatoire avant réservation..."></textarea>
+        <p style="font-size:12px;color:var(--muted-text);margin-top:4px">Si tu remplis ce champ, le client devra explicitement l'accepter avant de pouvoir réserver ou payer — utile pour éviter les malentendus.</p>
+      </div>
+      <div class="field"><label>Photos</label><div id="lm-image-uploader"></div></div>
       <div id="listing-form-error" style="color:var(--clay);font-size:13px;margin-bottom:10px;display:none"></div>
       <button type="submit" class="btn btn-primary btn-block" id="listing-form-submit">Soumettre à validation</button>
     </form>
@@ -107,6 +110,7 @@
 <script src="/assets/js/payment-icons.js"></script>
 <script src="/assets/js/layout.js"></script>
 <script src="/assets/js/notifications.js"></script>
+<script src="/assets/js/imageuploader.js"></script>
 <script src="/assets/js/vendeur.js"></script>
 </body>
 </html>

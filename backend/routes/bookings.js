@@ -14,7 +14,10 @@ function nightsBetween(checkIn, checkOut) {
 }
 
 async function withRoom(booking) {
-  const room = await db.prepare('SELECT id, title, city, images FROM rooms WHERE id = ?').get(booking.room_id);
+  const room = await db.prepare(`
+    SELECT rooms.id, rooms.title, rooms.city, rooms.country, rooms.address, rooms.images, rooms.pricing_period, users.name as owner_name
+    FROM rooms LEFT JOIN users ON users.id = rooms.owner_id WHERE rooms.id = ?
+  `).get(booking.room_id);
   const payment = await db.prepare('SELECT * FROM payments WHERE booking_id = ? ORDER BY id DESC LIMIT 1').get(booking.id);
   return { ...booking, room: room ? { ...room, images: JSON.parse(room.images || '[]') } : null, payment };
 }
@@ -25,12 +28,16 @@ export async function handleBookings(req, res, urlPath) {
     const user = requireAuth(req, res);
     if (!user) return;
     const b = await parseBody(req);
-    const { room_id, check_in, check_out, adults, children, special_requests, promo_code, travel_purpose } = b;
+    const { room_id, check_in, check_out, adults, children, special_requests, promo_code, travel_purpose, accept_terms } = b;
     if (!room_id || !check_in || !check_out) return json(res, 400, { error: 'Logement et dates requis.' });
     if (new Date(check_out) <= new Date(check_in)) return json(res, 400, { error: 'La date de départ doit être après la date d\'arrivée.' });
 
     const room = await db.prepare('SELECT * FROM rooms WHERE id = ?').get(room_id);
     if (!room || room.status !== 'disponible') return json(res, 404, { error: 'Logement indisponible.' });
+
+    if (room.rental_terms && !accept_terms) {
+      return json(res, 400, { error: 'Tu dois accepter les conditions particulières du logement avant de réserver.' });
+    }
 
     const conflict = await db.prepare(`
       SELECT id FROM bookings WHERE room_id = ? AND status IN ('en_attente', 'confirmee')
@@ -50,9 +57,10 @@ export async function handleBookings(req, res, urlPath) {
 
     const code = genCode();
     const info = await db.prepare(`
-      INSERT INTO bookings (code, room_id, user_id, check_in, check_out, adults, children, nights, price_per_night, total_price, special_requests, travel_purpose)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(code, room_id, user.id, check_in, check_out, Number(adults || 2), Number(children || 0), nights, room.price_per_night, Math.round(total), special_requests || null, travel_purpose || 'tourisme');
+      INSERT INTO bookings (code, room_id, user_id, check_in, check_out, adults, children, nights, price_per_night, total_price, special_requests, travel_purpose, accepted_terms, terms_accepted_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(code, room_id, user.id, check_in, check_out, Number(adults || 2), Number(children || 0), nights, room.price_per_night, Math.round(total), special_requests || null, travel_purpose || 'tourisme',
+      room.rental_terms || null, room.rental_terms ? new Date().toISOString() : null);
 
     const booking = await db.prepare('SELECT * FROM bookings WHERE id = ?').get(info.lastInsertRowid);
     await notifyAdmins('nouvelle_reservation', 'Nouvelle réservation', `${user.name} a réservé "${room.title}" (${code})`, { booking_id: booking.id });

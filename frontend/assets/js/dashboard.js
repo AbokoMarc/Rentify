@@ -19,6 +19,7 @@ function bookingRowHtml(b) {
     </div>
     <div style="display:flex;flex-direction:column;gap:8px">
       ${b.status === 'en_attente' && !b.payment ? `<a href="/checkout.html?booking=${b.id}" class="btn btn-primary btn-sm">Payer</a>` : ''}
+      ${['confirmee', 'terminee'].includes(b.status) ? `<a href="/recu.html?booking=${b.id}" class="btn btn-outline-ink btn-sm">📄 Voir le reçu</a>` : ''}
       ${['en_attente', 'confirmee'].includes(b.status) ? `<button class="btn btn-ghost btn-sm" onclick="cancelBooking(${b.id})">Annuler</button>` : ''}
       ${b.status === 'terminee' ? `<button class="btn btn-outline-ink btn-sm" onclick="openReview(${b.room?.id}, ${b.id})">Laisser un avis</button>` : ''}
     </div>
@@ -96,10 +97,30 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    ['bookings', 'favoris', 'profil'].forEach(t => qs(`tab-${t}`).classList.toggle('hidden', t !== btn.dataset.tab));
+    ['bookings', 'demandes', 'favoris', 'profil'].forEach(t => qs(`tab-${t}`).classList.toggle('hidden', t !== btn.dataset.tab));
     if (btn.dataset.tab === 'favoris') loadFavoris();
+    if (btn.dataset.tab === 'demandes') loadDemandes();
   });
 });
+
+const INQUIRY_STATUS_LABELS = { nouveau: '🆕 Nouvelle', en_discussion: '💬 En discussion', traite: '✅ Traitée', abandonne: 'Abandonnée' };
+
+async function loadDemandes() {
+  try {
+    const { inquiries } = await api('/inquiries/mine');
+    qs('demandes-list').innerHTML = inquiries.length ? inquiries.map(i => `
+      <div style="background:white;border-radius:var(--radius-md);box-shadow:var(--shadow-card);padding:18px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <strong>${i.kind === 'achat' ? "Demande d'achat" : 'Demande de location'}</strong>
+          <span style="font-size:12px;font-weight:700">${INQUIRY_STATUS_LABELS[i.status] || i.status}</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted-text);margin-top:4px">Envoyée le ${formatDate(i.created_at)}</div>
+        ${i.admin_note ? `<div style="margin-top:12px;padding:12px;background:var(--sand-deep);border-radius:var(--radius-sm);font-size:14px"><strong>Réponse du conseiller :</strong><br>${escapeHtml(i.admin_note)}</div>` : `<div style="margin-top:10px;font-size:13px;color:var(--muted-text)">En attente de réponse d'un conseiller...</div>`}
+      </div>`).join('') : `<div class="empty-state"><i>📋</i>Aucune demande immobilière pour l'instant.<br><a href="/immobilier.html" style="color:var(--ink);font-weight:600">Faire une demande</a></div>`;
+  } catch (err) {
+    qs('demandes-list').innerHTML = `<div class="empty-state">${escapeHtml(err.message)}</div>`;
+  }
+}
 
 if (window.location.hash === '#favoris') qs('favoris-tab-btn').click();
 

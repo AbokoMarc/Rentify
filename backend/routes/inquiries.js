@@ -51,6 +51,23 @@ export async function handleInquiries(req, res, urlPath) {
     return json(res, 200, { inquiries: rows.map(parseInquiry) });
   }
 
+  // PUT /api/admin/inquiries/:id/reply — l'admin répond dans l'app : le client reçoit une vraie notification
+  // avec le message (contrairement à un simple mailto: qui ne laisse aucune trace côté client).
+  const replyMatch = urlPath.match(/^\/api\/admin\/inquiries\/(\d+)\/reply$/);
+  if (replyMatch && req.method === 'PUT') {
+    const admin = requireAdmin(req, res);
+    if (!admin) return;
+    const { message } = await parseBody(req);
+    if (!message || !message.trim()) return json(res, 400, { error: 'Le message ne peut pas être vide.' });
+    const inquiry = await db.prepare('SELECT * FROM property_inquiries WHERE id = ?').get(replyMatch[1]);
+    if (!inquiry) return notFound(res);
+    await db.prepare(`UPDATE property_inquiries SET status = 'en_discussion', admin_note = ?, updated_at = datetime('now') WHERE id = ?`)
+      .run(message.trim(), replyMatch[1]);
+    await notifyClient(inquiry.user_id, 'reponse_conseiller', 'Réponse d\'un conseiller Lokaya', message.trim(), { inquiry_id: inquiry.id });
+    const updated = await db.prepare('SELECT * FROM property_inquiries WHERE id = ?').get(replyMatch[1]);
+    return json(res, 200, { inquiry: parseInquiry(updated) });
+  }
+
   // PUT /api/admin/inquiries/:id/status — changer le statut d'une demande
   const statusMatch = urlPath.match(/^\/api\/admin\/inquiries\/(\d+)\/status$/);
   if (statusMatch && req.method === 'PUT') {

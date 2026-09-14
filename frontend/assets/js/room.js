@@ -58,6 +58,11 @@ async function loadRoom() {
       : `<span style="color:var(--muted-text)">Pas encore d'avis</span>`;
     qs('r-amenities').innerHTML = room.amenities.map(a => `<span class="amenity-chip">${AMENITY_ICONS[a] || '✓'} ${escapeHtml(a)}</span>`).join('') || '<p style="color:var(--muted-text)">Aucun équipement renseigné.</p>';
 
+    if (room.rental_terms) {
+      qs('bw-terms-box').classList.remove('hidden');
+      qs('bw-terms-text').textContent = room.rental_terms;
+    }
+
     if (room.latitude != null && room.longitude != null) {
       qs('r-map-section').classList.remove('hidden');
       const map = L.map('r-map', { scrollWheelZoom: false }).setView([room.latitude, room.longitude], 14);
@@ -141,13 +146,17 @@ qs('bw-submit').addEventListener('click', async () => {
   const ci = qs('bw-checkin').value, co = qs('bw-checkout').value;
   if (!ci || !co) { showToast('Dates manquantes', 'Choisissez une date d\'arrivée et de départ.', 'warn'); return; }
   if (nights() <= 0) { showToast('Dates invalides', 'La date de départ doit être après l\'arrivée.', 'warn'); return; }
+  if (!qs('bw-terms-box').classList.contains('hidden') && !qs('bw-terms-accept').checked) {
+    showToast('Conditions non acceptées', 'Coche la case pour accepter les conditions du vendeur avant de réserver.', 'warn');
+    return;
+  }
 
   const btn = qs('bw-submit');
   btn.disabled = true; btn.textContent = 'Réservation en cours…';
   try {
     const { booking } = await api('/bookings', {
       method: 'POST',
-      body: { room_id: Number(roomId), check_in: ci, check_out: co, adults: Number(qs('bw-adults').textContent), travel_purpose: qs('bw-purpose').value },
+      body: { room_id: Number(roomId), check_in: ci, check_out: co, adults: Number(qs('bw-adults').textContent), travel_purpose: qs('bw-purpose').value, accept_terms: qs('bw-terms-accept').checked },
     });
     window.location.href = `/checkout.html?booking=${booking.id}`;
   } catch (err) {
