@@ -1,14 +1,21 @@
 import { db } from '../db.js';
 import { json, parseBody } from '../lib/http.js';
 import { hashPassword, verifyPassword, signToken, requireAuth } from '../lib/auth.js';
+import { isEmailConfigured, sendVerificationEmail } from '../lib/email.js';
+import crypto from 'node:crypto';
 
 function publicUser(u) {
   return {
     id: u.id, name: u.name, email: u.email, phone: u.phone, role: u.role, avatar: u.avatar,
     country: u.country, loyalty_points: u.loyalty_points, must_change_password: !!u.must_change_password,
     preferred_language: u.preferred_language, default_travel_purpose: u.default_travel_purpose,
-    vendeur_statut: u.vendeur_statut,
+    vendeur_statut: u.vendeur_statut, email_verified: !!u.email_verified,
   };
+}
+
+function originOf(req) {
+  const proto = req.headers['x-forwarded-proto'] || 'https';
+  return `${proto}://${req.headers.host}`;
 }
 
 export async function handleAuth(req, res, urlPath) {
@@ -22,23 +29,50 @@ export async function handleAuth(req, res, urlPath) {
     if (existing) return json(res, 409, { error: 'Un compte existe déjà avec cet email.' });
     const role = want_seller ? 'vendeur' : 'client';
     const vendeurStatut = want_seller ? 'en_attente' : null;
+    const verifyToken = crypto.randomBytes(24).toString('hex');
     const info = await db.prepare(`
       INSERT INTO users (name, email, phone, country, address, city, postal_code, date_of_birth, nationality,
-        id_document_type, id_document_number, default_travel_purpose, preferred_language, password_hash, role, vendeur_statut)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id_document_type, id_document_number, default_travel_purpose, preferred_language, password_hash, role, vendeur_statut, email_verify_token)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       name.trim(), email.toLowerCase().trim(), phone || null, country || null, address || null, city || null,
       postal_code || null, date_of_birth || null, nationality || null, id_document_type || null,
       id_document_number || null, default_travel_purpose || 'loisirs', preferred_language || 'fr',
-      hashPassword(password), role, vendeurStatut
+      hashPassword(password), role, vendeurStatut, verifyToken
     );
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
     if (want_seller) {
       const { notifyAdmins } = await import('../lib/notify.js');
       await notifyAdmins('nouveau_vendeur', 'Nouveau vendeur à valider', `${user.name} souhaite publier des annonces sur Lokaya.`, { user_id: user.id });
     }
+    if (isEmailConfigured()) {
+      sendVerificationEmail(user, verifyToken, originOf(req)).catch(err => console.error('Erreur envoi email de vérification:', err));
+    }
     const token = signToken({ id: user.id, role: user.role, name: user.name });
     return json(res, 201, { token, user: publicUser(user) });
+  }
+
+  // GET /api/auth/verify-email?token=... — confirme l'adresse email depuis le lien reçu
+  if (urlPath === '/api/auth/verify-email' && req.method === 'GET') {
+    const token = new URL(req.url, `http://${req.headers.host}`).searchParams.get('token');
+    if (!token) return json(res, 400, { error: 'Lien invalide.' });
+    const user = await db.prepare('SELECT * FROM users WHERE email_verify_token = ?').get(token);
+    if (!user) return json(res, 400, { error: 'Lien invalide ou déjà utilisé.' });
+    await db.prepare(`UPDATE users SET email_verified = 1, email_verify_token = NULL WHERE id = ?`).run(user.id);
+    return json(res, 200, { success: true });
+  }
+
+  // POST /api/auth/resend-verification — renvoie l'email de confirmation (utilisateur connecté)
+  if (urlPath === '/api/auth/resend-verification' && req.method === 'POST') {
+    const authUser = requireAuth(req, res);
+    if (!authUser) return;
+    if (!isEmailConfigured()) return json(res, 503, { error: "La vérification d'email n'est pas encore configurée." });
+    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(authUser.id);
+    if (user.email_verified) return json(res, 200, { message: 'Ton email est déjà confirmé.' });
+    const verifyToken = crypto.randomBytes(24).toString('hex');
+    await db.prepare(`UPDATE users SET email_verify_token = ? WHERE id = ?`).run(verifyToken, user.id);
+    await sendVerificationEmail(user, verifyToken, originOf(req));
+    return json(res, 200, { message: 'Email de confirmation renvoyé.' });
   }
 
   // Un client déjà inscrit demande à devenir vendeur (peut ensuite proposer des annonces, soumises à validation admin).
@@ -68,18 +102,30 @@ export async function handleAuth(req, res, urlPath) {
     return json(res, 200, { success: true });
   }
 
-  // Un client oublie son mot de passe : on notifie l'admin, qui peut générer et transmettre un mot de passe
-  // temporaire (Espace admin > Clients > Réinitialiser). Pas de fuite d'info : réponse identique que l'email existe ou non.
+  // Un client oublie son mot de passe. Si l'email est configuré : on génère et envoie directement un
+  // mot de passe temporaire, sans attendre l'admin. Sinon : on notifie l'admin, qui peut le faire depuis
+  // Espace admin > Clients > Réinitialiser. Pas de fuite d'info : réponse identique que l'email existe ou non.
   if (urlPath === '/api/auth/forgot-password' && req.method === 'POST') {
     const { email } = await parseBody(req);
     if (email) {
       const user = await db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase().trim());
       if (user) {
-        const { notifyAdmins } = await import('../lib/notify.js');
-        await notifyAdmins('mot_de_passe_oublie', 'Demande de mot de passe oublié', `${user.name} (${user.email}) a demandé la réinitialisation de son mot de passe.`, { user_id: user.id });
+        if (isEmailConfigured()) {
+          const { sendTempPasswordEmail } = await import('../lib/email.js');
+          const tempPassword = crypto.randomBytes(6).toString('base64url'); // ex : 8 caractères lisibles
+          await db.prepare(`UPDATE users SET password_hash = ?, must_change_password = 1 WHERE id = ?`).run(hashPassword(tempPassword), user.id);
+          await sendTempPasswordEmail(user, tempPassword).catch(err => console.error('Erreur envoi email mot de passe:', err));
+        } else {
+          const { notifyAdmins } = await import('../lib/notify.js');
+          await notifyAdmins('mot_de_passe_oublie', 'Demande de mot de passe oublié', `${user.name} (${user.email}) a demandé la réinitialisation de son mot de passe.`, { user_id: user.id });
+        }
       }
     }
-    return json(res, 200, { message: "Si un compte existe avec cet email, l'administrateur a été prévenu et te contactera avec un nouveau mot de passe." });
+    return json(res, 200, {
+      message: isEmailConfigured()
+        ? "Si un compte existe avec cet email, un nouveau mot de passe temporaire vient de t'être envoyé par email."
+        : "Si un compte existe avec cet email, l'administrateur a été prévenu et te contactera avec un nouveau mot de passe.",
+    });
   }
 
   if (urlPath === '/api/auth/login' && req.method === 'POST') {

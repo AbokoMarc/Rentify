@@ -66,9 +66,12 @@ qs('reauth-form').addEventListener('submit', async (e) => {
       qs('reauth-overlay').classList.add('hidden');
       qs('detail-overlay').classList.remove('hidden');
     } else if (pendingAction.type === 'reset') {
-      const { temp_password } = await api(`/admin/users/${pendingAction.userId}/reset-password`, { method: 'POST', body: { admin_password: password } });
+      const { temp_password, emailed } = await api(`/admin/users/${pendingAction.userId}/reset-password`, { method: 'POST', body: { admin_password: password } });
       qs('reauth-overlay').classList.add('hidden');
       qs('temp-pwd-value').textContent = temp_password;
+      qs('temp-pwd-note').textContent = emailed
+        ? "Un email avec ce mot de passe a déjà été envoyé automatiquement au client. Tu n'as rien d'autre à faire."
+        : "Communique ce mot de passe temporaire au client par un canal sécurisé (téléphone, WhatsApp). Il devra le changer à sa prochaine connexion. Il ne sera plus jamais affiché.";
       qs('temp-pwd-overlay').classList.remove('hidden');
     }
     pendingAction = null;

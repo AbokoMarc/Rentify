@@ -82,9 +82,14 @@ export async function handleAdminUsers(req, res, urlPath) {
     await db.prepare(`INSERT INTO password_reset_log (target_user_id, performed_by_admin_id) VALUES (?, ?)`).run(user.id, admin.id);
 
     await notifyClient(user.id, 'mot_de_passe_reinitialise', 'Mot de passe réinitialisé', 'Un administrateur a réinitialisé votre mot de passe. Utilisez le nouveau mot de passe qui vous a été communiqué, vous devrez le changer à la connexion.', {});
+    const { isEmailConfigured, sendTempPasswordEmail } = await import('../lib/email.js');
+    let emailed = false;
+    if (isEmailConfigured()) {
+      try { await sendTempPasswordEmail(user, tempPassword); emailed = true; } catch (err) { console.error('Erreur envoi email mot de passe:', err); }
+    }
 
     // Le mot de passe temporaire n'est affiché qu'une seule fois, à l'admin qui vient de le générer — à transmettre au client de vive voix / par un canal sécurisé.
-    return json(res, 200, { temp_password: tempPassword, email: user.email, name: user.name });
+    return json(res, 200, { temp_password: tempPassword, email: user.email, name: user.name, emailed });
   }
 
   // GET /api/admin/sellers — tous les vendeurs (quel que soit leur statut), avec le nombre d'annonces de chacun

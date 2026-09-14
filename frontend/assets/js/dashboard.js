@@ -126,3 +126,12 @@ if (window.location.hash === '#favoris') qs('favoris-tab-btn').click();
 
 loadBookings();
 loadProfile();
+
+const currentUser = Auth.getUser();
+if (currentUser && !currentUser.email_verified) qs('verify-banner').classList.remove('hidden');
+qs('resend-verify-btn').addEventListener('click', async () => {
+  try {
+    const { message } = await api('/auth/resend-verification', { method: 'POST' });
+    showToast('Envoyé', message, 'success');
+  } catch (err) { showToast('Impossible pour le moment', err.message, 'warn'); }
+});

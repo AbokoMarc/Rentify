@@ -64,6 +64,8 @@ await db.exec(`
     country TEXT,
     loyalty_points INTEGER NOT NULL DEFAULT 0,
     must_change_password INTEGER NOT NULL DEFAULT 0,
+    email_verified INTEGER NOT NULL DEFAULT 0,
+    email_verify_token TEXT,
     -- Profil étendu collecté à l'inscription : visible admin, protégé par re-authentification (RGPD)
     address TEXT,
     city TEXT,
