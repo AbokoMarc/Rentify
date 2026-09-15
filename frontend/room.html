@@ -64,12 +64,19 @@
 
     <div class="booking-widget">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px">
-        <div><span style="font-size:22px;font-weight:700;font-family:var(--font-display)" id="bw-price"></span> <span style="font-size:13px;color:var(--muted-text)">/ nuit</span></div>
+        <div><span style="font-size:22px;font-weight:700;font-family:var(--font-display)" id="bw-price"></span></div>
         <div id="bw-rating" style="font-size:13px;font-weight:600"></div>
       </div>
-      <div class="field-row">
+      <div class="field-row" id="bw-dates-nightly">
         <div class="field"><label>Arrivée</label><input type="date" id="bw-checkin"></div>
         <div class="field"><label>Départ</label><input type="date" id="bw-checkout"></div>
+      </div>
+      <div class="field-row hidden" id="bw-dates-monthly">
+        <div class="field"><label>Date d'entrée</label><input type="date" id="bw-checkin-monthly"></div>
+        <div class="field">
+          <label>Nombre de mois</label>
+          <div class="step-count"><button type="button" data-adj="-1" data-target="bw-months">−</button><span id="bw-months">1</span><button type="button" data-adj="1" data-target="bw-months">+</button></div>
+        </div>
       </div>
       <div class="field">
         <label>Voyageurs</label>

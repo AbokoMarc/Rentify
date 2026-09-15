@@ -237,4 +237,26 @@ await db.exec(`
   );
 `);
 
+// --- Migrations légères : ALTER TABLE pour les colonnes ajoutées après le tout premier déploiement.
+// `CREATE TABLE IF NOT EXISTS` ne modifie jamais une table déjà existante — sans ce bloc, une base
+// créée avant l'ajout d'une colonne ne la reçoit jamais, et toute requête qui la référence échoue (500).
+// Chaque ALTER TABLE est tenté séparément et son échec (colonne déjà existante) est silencieusement ignoré.
+const MIGRATIONS = [
+  `ALTER TABLE rooms ADD COLUMN pricing_period TEXT NOT NULL DEFAULT 'nuit'`,
+  `ALTER TABLE rooms ADD COLUMN furnished INTEGER`,
+  `ALTER TABLE rooms ADD COLUMN rental_terms TEXT`,
+  `ALTER TABLE rooms ADD COLUMN owner_id INTEGER REFERENCES users(id)`,
+  `ALTER TABLE rooms ADD COLUMN approval_status TEXT NOT NULL DEFAULT 'approuve'`,
+  `ALTER TABLE rooms ADD COLUMN rejection_reason TEXT`,
+  `ALTER TABLE bookings ADD COLUMN accepted_terms TEXT`,
+  `ALTER TABLE bookings ADD COLUMN terms_accepted_at TEXT`,
+  `ALTER TABLE users ADD COLUMN vendeur_statut TEXT`,
+  `ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE users ADD COLUMN email_verify_token TEXT`,
+  `ALTER TABLE payments ADD COLUMN payer_phone TEXT`,
+];
+for (const sql of MIGRATIONS) {
+  try { await db.exec(sql); } catch { /* colonne déjà existante — rien à faire */ }
+}
+
 export default db;

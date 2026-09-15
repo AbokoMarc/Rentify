@@ -164,7 +164,7 @@ qs('detail-body').addEventListener('click', async (e) => {
 
   if (replyId) {
     const message = qs('reply-message').value.trim();
-    if (!message) { showToast('Message vide', 'Écris une réponse avant d\\'envoyer.', 'warn'); return; }
+    if (!message) { showToast('Message vide', "Écris une réponse avant d'envoyer.", 'warn'); return; }
     try {
       await api(`/admin/inquiries/${replyId}/reply`, { method: 'PUT', body: { message } });
       showToast('Réponse envoyée', 'Le client la voit immédiatement dans ses notifications.', 'success');

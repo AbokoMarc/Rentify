@@ -83,6 +83,8 @@ async function loadRoom() {
       : `<div class="empty-state" style="padding:24px"><i>💬</i>Aucun avis pour l'instant.</div>`;
 
     qs('bw-price').innerHTML = money(room.price_per_night, { compact: true, period: room.pricing_period });
+    qs('bw-dates-nightly').classList.toggle('hidden', room.pricing_period === 'mois');
+    qs('bw-dates-monthly').classList.toggle('hidden', room.pricing_period !== 'mois');
     qs('bw-rating').innerHTML = room.reviews_count > 0 ? `★ ${room.rating}` : '';
 
     if (Auth.isLoggedIn()) {
@@ -115,11 +117,25 @@ document.querySelectorAll('[data-adj]').forEach(btn => {
   });
 });
 
+function isMonthly() { return currentRoom?.pricing_period === 'mois'; }
+
 function nights() {
+  if (isMonthly()) return Number(qs('bw-months').textContent) || 0;
   const ci = qs('bw-checkin').value, co = qs('bw-checkout').value;
   if (!ci || !co) return 0;
   const n = Math.round((new Date(co) - new Date(ci)) / 86400000);
   return n > 0 ? n : 0;
+}
+
+function currentDates() {
+  if (isMonthly()) {
+    const ci = qs('bw-checkin-monthly').value;
+    if (!ci) return { ci: '', co: '' };
+    const months = Number(qs('bw-months').textContent) || 1;
+    const co = new Date(new Date(ci).getTime() + months * 30 * 86400000).toISOString().slice(0, 10);
+    return { ci, co };
+  }
+  return { ci: qs('bw-checkin').value, co: qs('bw-checkout').value };
 }
 
 async function updateTotal() {
@@ -129,10 +145,13 @@ async function updateTotal() {
   if (!currentRoom) return;
   if (n === 0) { totalEl.innerHTML = ''; availEl.innerHTML = ''; return; }
 
-  totalEl.innerHTML = `<div style="display:flex;justify-content:space-between"><span>${money(currentRoom.price_per_night)} × ${n} nuit${n > 1 ? 's' : ''}</span><strong>${money(currentRoom.price_per_night * n)}</strong></div>`;
+  const unitLabel = isMonthly() ? `mois` : `nuit${n > 1 ? 's' : ''}`;
+  totalEl.innerHTML = `<div style="display:flex;justify-content:space-between"><span>${money(currentRoom.price_per_night)} × ${n} ${unitLabel}</span><strong>${money(currentRoom.price_per_night * n)}</strong></div>`;
 
+  const { ci, co } = currentDates();
+  if (!ci || !co) { availEl.innerHTML = ''; return; }
   try {
-    const { available } = await api(`/rooms/${roomId}/availability?check_in=${qs('bw-checkin').value}&check_out=${qs('bw-checkout').value}`, { auth: false });
+    const { available } = await api(`/rooms/${roomId}/availability?check_in=${ci}&check_out=${co}`, { auth: false });
     availEl.innerHTML = available
       ? `<span style="color:var(--forest)">✓ Disponible sur ces dates</span>`
       : `<span style="color:var(--clay)">✖ Indisponible sur ces dates</span>`;
@@ -140,12 +159,13 @@ async function updateTotal() {
 }
 qs('bw-checkin').addEventListener('change', updateTotal);
 qs('bw-checkout').addEventListener('change', updateTotal);
+qs('bw-checkin-monthly').addEventListener('change', updateTotal);
 
 qs('bw-submit').addEventListener('click', async () => {
   if (!Auth.isLoggedIn()) { window.location.href = `/login.html?next=/room.html?id=${roomId}`; return; }
-  const ci = qs('bw-checkin').value, co = qs('bw-checkout').value;
-  if (!ci || !co) { showToast('Dates manquantes', 'Choisissez une date d\'arrivée et de départ.', 'warn'); return; }
-  if (nights() <= 0) { showToast('Dates invalides', 'La date de départ doit être après l\'arrivée.', 'warn'); return; }
+  const { ci, co } = currentDates();
+  if (!ci || !co) { showToast('Date manquante', isMonthly() ? "Choisis une date d'entrée." : "Choisis une date d'arrivée et de départ.", 'warn'); return; }
+  if (nights() <= 0) { showToast('Dates invalides', isMonthly() ? 'Choisis au moins 1 mois.' : 'La date de départ doit être après l\'arrivée.', 'warn'); return; }
   if (!qs('bw-terms-box').classList.contains('hidden') && !qs('bw-terms-accept').checked) {
     showToast('Conditions non acceptées', 'Coche la case pour accepter les conditions du vendeur avant de réserver.', 'warn');
     return;
