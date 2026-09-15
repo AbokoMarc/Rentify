@@ -115,12 +115,46 @@ async function loadDemandes() {
           <span style="font-size:12px;font-weight:700">${INQUIRY_STATUS_LABELS[i.status] || i.status}</span>
         </div>
         <div style="font-size:12px;color:var(--muted-text);margin-top:4px">Envoyée le ${formatDate(i.created_at)}</div>
-        ${i.admin_note ? `<div style="margin-top:12px;padding:12px;background:var(--sand-deep);border-radius:var(--radius-sm);font-size:14px"><strong>Réponse du conseiller :</strong><br>${escapeHtml(i.admin_note)}</div>` : `<div style="margin-top:10px;font-size:13px;color:var(--muted-text)">En attente de réponse d'un conseiller...</div>`}
+        <div id="thread-${i.id}" style="margin-top:12px"></div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <input type="text" id="reply-input-${i.id}" placeholder="Écrire une réponse au conseiller..." style="flex:1;border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:8px 12px;font-size:13px">
+          <button class="btn btn-primary btn-sm" data-send-reply="${i.id}">Envoyer</button>
+        </div>
       </div>`).join('') : `<div class="empty-state"><i>📋</i>Aucune demande immobilière pour l'instant.<br><a href="/immobilier.html" style="color:var(--ink);font-weight:600">Faire une demande</a></div>`;
+
+    inquiries.forEach(i => loadThread(i.id));
   } catch (err) {
     qs('demandes-list').innerHTML = `<div class="empty-state">${escapeHtml(err.message)}</div>`;
   }
 }
+
+async function loadThread(inquiryId) {
+  const el = qs(`thread-${inquiryId}`);
+  if (!el) return;
+  try {
+    const { messages } = await api(`/inquiries/${inquiryId}/messages`);
+    el.innerHTML = messages.length ? messages.map(m => `
+      <div style="padding:10px 12px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:6px;background:${m.sender_role === 'admin' ? 'var(--sand-deep)' : '#EEF3EC'}">
+        <strong>${m.sender_role === 'admin' ? '💬 ' + escapeHtml(m.sender_name) : 'Toi'}</strong> · <span style="color:var(--muted-text);font-size:11px">${formatDate(m.created_at)}</span>
+        <div style="margin-top:2px">${escapeHtml(m.message)}</div>
+      </div>`).join('') : `<div style="font-size:13px;color:var(--muted-text)">En attente de réponse d'un conseiller...</div>`;
+  } catch { /* silencieux */ }
+}
+
+document.addEventListener('click', async (e) => {
+  const inquiryId = e.target.dataset.sendReply;
+  if (!inquiryId) return;
+  const input = qs(`reply-input-${inquiryId}`);
+  const message = input.value.trim();
+  if (!message) return;
+  e.target.disabled = true;
+  try {
+    await api(`/inquiries/${inquiryId}/messages`, { method: 'POST', body: { message } });
+    input.value = '';
+    loadThread(inquiryId);
+  } catch (err) { showToast('Erreur', err.message, 'warn'); }
+  e.target.disabled = false;
+});
 
 if (window.location.hash === '#favoris') qs('favoris-tab-btn').click();
 

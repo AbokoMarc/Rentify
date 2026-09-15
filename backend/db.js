@@ -235,6 +235,17 @@ await db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
+
+  -- Fil de discussion sur une demande immobilière : messages dans les deux sens (client <-> admin),
+  -- pour remplacer le simple admin_note à sens unique qui ne permettait pas au client de répondre.
+  CREATE TABLE IF NOT EXISTS inquiry_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    inquiry_id INTEGER NOT NULL REFERENCES property_inquiries(id),
+    sender_role TEXT NOT NULL, -- admin | client
+    sender_name TEXT NOT NULL,
+    message TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 `);
 
 // --- Migrations légères : ALTER TABLE pour les colonnes ajoutées après le tout premier déploiement.

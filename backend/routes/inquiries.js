@@ -51,8 +51,36 @@ export async function handleInquiries(req, res, urlPath) {
     return json(res, 200, { inquiries: rows.map(parseInquiry) });
   }
 
+  // GET /api/inquiries/:id/messages — le fil de discussion (client propriétaire de la demande, ou admin)
+  const messagesMatch = urlPath.match(/^\/api\/inquiries\/(\d+)\/messages$/);
+  if (messagesMatch && req.method === 'GET') {
+    const user = requireAuth(req, res);
+    if (!user) return;
+    const inquiry = await db.prepare('SELECT * FROM property_inquiries WHERE id = ?').get(messagesMatch[1]);
+    if (!inquiry) return notFound(res);
+    if (inquiry.user_id !== user.id && user.role !== 'admin') return json(res, 403, { error: 'Accès refusé.' });
+    const messages = await db.prepare('SELECT * FROM inquiry_messages WHERE inquiry_id = ? ORDER BY created_at ASC').all(messagesMatch[1]);
+    return json(res, 200, { messages });
+  }
+
+  // POST /api/inquiries/:id/messages — le client répond dans le fil (l'admin utilise la route /reply ci-dessous)
+  if (messagesMatch && req.method === 'POST') {
+    const user = requireAuth(req, res);
+    if (!user) return;
+    const inquiry = await db.prepare('SELECT * FROM property_inquiries WHERE id = ?').get(messagesMatch[1]);
+    if (!inquiry) return notFound(res);
+    if (inquiry.user_id !== user.id) return json(res, 403, { error: 'Accès refusé.' });
+    const { message } = await parseBody(req);
+    if (!message || !message.trim()) return json(res, 400, { error: 'Le message ne peut pas être vide.' });
+    await db.prepare(`INSERT INTO inquiry_messages (inquiry_id, sender_role, sender_name, message) VALUES (?, 'client', ?, ?)`)
+      .run(messagesMatch[1], user.name, message.trim());
+    await db.prepare(`UPDATE property_inquiries SET status = 'en_discussion', updated_at = datetime('now') WHERE id = ?`).run(messagesMatch[1]);
+    await notifyAdmins('reponse_client_demande', 'Réponse du client à une demande immo', `${user.name} : ${message.trim()}`, { inquiry_id: inquiry.id });
+    return json(res, 201, { success: true });
+  }
+
   // PUT /api/admin/inquiries/:id/reply — l'admin répond dans l'app : le client reçoit une vraie notification
-  // avec le message (contrairement à un simple mailto: qui ne laisse aucune trace côté client).
+  // avec le message, ET peut y répondre à son tour depuis son tableau de bord (fil de discussion complet).
   const replyMatch = urlPath.match(/^\/api\/admin\/inquiries\/(\d+)\/reply$/);
   if (replyMatch && req.method === 'PUT') {
     const admin = requireAdmin(req, res);
@@ -63,6 +91,8 @@ export async function handleInquiries(req, res, urlPath) {
     if (!inquiry) return notFound(res);
     await db.prepare(`UPDATE property_inquiries SET status = 'en_discussion', admin_note = ?, updated_at = datetime('now') WHERE id = ?`)
       .run(message.trim(), replyMatch[1]);
+    await db.prepare(`INSERT INTO inquiry_messages (inquiry_id, sender_role, sender_name, message) VALUES (?, 'admin', ?, ?)`)
+      .run(replyMatch[1], admin.name || 'Conseiller Lokaya', message.trim());
     await notifyClient(inquiry.user_id, 'reponse_conseiller', 'Réponse d\'un conseiller Lokaya', message.trim(), { inquiry_id: inquiry.id });
     const updated = await db.prepare('SELECT * FROM property_inquiries WHERE id = ?').get(replyMatch[1]);
     return json(res, 200, { inquiry: parseInquiry(updated) });

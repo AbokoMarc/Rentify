@@ -139,7 +139,10 @@ qs('inquiries-tbody').addEventListener('click', (e) => {
     <p><strong>${escapeHtml(inquiry.client_name)}</strong> — ${escapeHtml(inquiry.client_email)}${inquiry.client_phone ? ' · ' + escapeHtml(inquiry.client_phone) : ''}</p>
     <p style="margin-top:4px"><span class="kind-tag kind-${inquiry.kind}">${inquiry.kind === 'achat' ? 'Achat' : 'Location'}</span> ${inquiry.wants_admin_contact ? '<span class="badge badge-confirmee" style="margin-left:8px">Souhaite être contacté</span>' : ''}</p>
     <div style="margin-top:16px">${rows}</div>
-    ${inquiry.admin_note ? `<div style="margin-top:16px;padding:12px;background:var(--sand-deep);border-radius:var(--radius-sm);font-size:13px"><strong>Dernière réponse envoyée :</strong> ${escapeHtml(inquiry.admin_note)}</div>` : ''}
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line)">
+      <h3 style="font-size:13px;font-weight:700;margin-bottom:8px">Fil de discussion</h3>
+      <div id="inquiry-thread"><p style="font-size:13px;color:var(--muted-text)">Chargement…</p></div>
+    </div>
 
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line)">
       <label style="font-size:13px;font-weight:700;display:block;margin-bottom:6px">Répondre au client (reçu directement dans son espace Lokaya)</label>
@@ -154,7 +157,20 @@ qs('inquiries-tbody').addEventListener('click', (e) => {
     </div>
   `;
   qs('detail-overlay').classList.remove('hidden');
+  loadInquiryThread(inquiry.id);
 });
+
+async function loadInquiryThread(inquiryId) {
+  const el = qs('inquiry-thread');
+  try {
+    const { messages } = await api(`/inquiries/${inquiryId}/messages`);
+    el.innerHTML = messages.length ? messages.map(m => `
+      <div style="padding:10px 12px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:6px;background:${m.sender_role === 'admin' ? 'var(--sand-deep)' : '#EEF3EC'}">
+        <strong>${m.sender_role === 'admin' ? '💬 ' + escapeHtml(m.sender_name) : '👤 ' + escapeHtml(m.sender_name)}</strong> · <span style="color:var(--muted-text);font-size:11px">${formatDate(m.created_at)}</span>
+        <div style="margin-top:2px">${escapeHtml(m.message)}</div>
+      </div>`).join('') : `<p style="font-size:13px;color:var(--muted-text)">Aucun message échangé pour l'instant.</p>`;
+  } catch (err) { el.innerHTML = `<p style="font-size:13px;color:var(--clay)">${escapeHtml(err.message)}</p>`; }
+}
 
 qs('detail-close').addEventListener('click', () => qs('detail-overlay').classList.add('hidden'));
 

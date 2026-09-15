@@ -19,6 +19,8 @@
   .pay-method.selected { border-color: var(--ink); background: var(--sand); }
   .pay-method-head { display: flex; align-items: center; gap: 12px; }
   .pay-method-head .pm-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--sand-deep); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .pm-logos { display: flex; align-items: center; gap: 4px; }
+  .pm-logos img { height: 28px; width: auto; object-fit: contain; }
   .pay-method-body { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); display: none; }
   .pay-method.selected .pay-method-body { display: block; }
   .summary-card { background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 22px; position: sticky; top: 96px; }
@@ -35,7 +37,7 @@
       <h3 style="font-size:16px;margin-bottom:14px" data-i18n="pay_mobile_money">Payer en Mobile Money</h3>
 
       <div class="pay-method selected" data-method="mobile_money">
-        <div class="pay-method-head"><span class="pm-icon">📱</span><div><strong>MTN Mobile Money / Orange Money</strong><div style="font-size:13px;color:var(--muted-text)">Paiement automatique et sécurisé, confirmation immédiate</div></div></div>
+        <div class="pay-method-head"><span class="pm-logos"><img src="/assets/img/mtn-momo-logo.png" alt="MTN Mobile Money"><img src="/assets/img/orange-money-logo.png" alt="Orange Money"></span><div><strong>MTN Mobile Money / Orange Money</strong><div style="font-size:13px;color:var(--muted-text)">Paiement automatique et sécurisé, confirmation immédiate</div></div></div>
         <div class="pay-method-body" style="display:block">
           <div id="mm-unavailable" class="hidden" style="font-size:13px;color:var(--clay);margin-bottom:10px">Le paiement Mobile Money automatique n'est pas encore configuré. Contacte l'admin sur WhatsApp pour payer autrement.</div>
           <div class="field" id="mm-fields">
