@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reçu — Lokaya</title>
+<link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+<link rel="stylesheet" href="/assets/css/style.css">
+<style>
+  .receipt-page { max-width: 680px; margin: 32px auto 80px; padding: 0 20px; }
+  .receipt-card { background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 40px; }
+  .receipt-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--ink); padding-bottom: 20px; margin-bottom: 24px; }
+  .receipt-head .brand-mark { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 22px; font-weight: 700; }
+  .receipt-head .brand-mark img { width: 34px; height: 34px; }
+  .receipt-ref { text-align: right; font-size: 13px; color: var(--muted-text); }
+  .receipt-section { margin-bottom: 22px; }
+  .receipt-section h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted-text); margin-bottom: 8px; }
+  .receipt-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; border-bottom: 1px dashed var(--line); }
+  .receipt-total { display: flex; justify-content: space-between; font-size: 18px; font-weight: 700; padding-top: 12px; margin-top: 6px; border-top: 2px solid var(--ink); }
+  .receipt-terms { background: var(--sand-deep); border-radius: var(--radius-sm); padding: 14px; font-size: 13px; white-space: pre-line; margin-top: 10px; }
+  .receipt-status { display: inline-flex; align-items: center; gap: 6px; background: var(--forest); color: white; font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 999px; }
+  .receipt-legal { font-size: 11px; color: var(--muted-text); margin-top: 30px; line-height: 1.6; border-top: 1px solid var(--line); padding-top: 16px; }
+  .no-print { margin-bottom: 16px; display: flex; gap: 10px; }
+  @media print {
+    .no-print, #app-header, #app-footer, .whatsapp-float { display: none !important; }
+    body { background: white; }
+    .receipt-card { box-shadow: none; padding: 0; }
+    .receipt-page { margin: 0; max-width: none; }
+  }
+</style>
+</head>
+<body>
+<div id="app-header"></div>
+
+<div class="receipt-page">
+  <div class="no-print">
+    <a href="/dashboard.html" class="btn btn-ghost btn-sm">← Retour</a>
+    <button class="btn btn-dark btn-sm" onclick="window.print()">🖨️ Imprimer / Télécharger en PDF</button>
+  </div>
+
+  <div class="receipt-card" id="receipt-content">
+    <p style="text-align:center;color:var(--muted-text)">Chargement du reçu…</p>
+  </div>
+</div>
+
+<div id="app-footer"></div>
+<script src="/assets/js/icons.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/i18n.js"></script>
+<script src="/assets/js/theme.js"></script>
+<script src="/assets/js/payment-icons.js"></script>
+<script src="/assets/js/layout.js"></script>
+<script src="/assets/js/notifications.js"></script>
+<script>
+if (!requireAuthOrRedirect()) { /* redirection en cours */ }
+mountLayout();
+
+const METHOD_LABELS = { mobile_money: 'Mobile Money (CamPay)', crypto: 'Crypto-monnaie' };
+const bookingId = new URLSearchParams(window.location.search).get('booking');
+
+async function loadReceipt() {
+  const el = document.getElementById('receipt-content');
+  try {
+    const { bookings } = await api('/bookings/mine');
+    const booking = bookings.find(b => b.id === Number(bookingId));
+    if (!booking) { el.innerHTML = `<p style="text-align:center;color:var(--clay)">Réservation introuvable.</p>`; return; }
+    if (booking.status === 'en_attente') { el.innerHTML = `<p style="text-align:center;color:var(--muted-text)">Le paiement de cette réservation n'est pas encore confirmé — le reçu sera disponible une fois le paiement validé.</p>`; return; }
+
+    const user = Auth.getUser();
+    const p = booking.payment;
+    const periodLabel = booking.room?.pricing_period === 'mois' ? 'par mois' : 'par nuit';
+
+    el.innerHTML = `
+      <div class="receipt-head">
+        <div class="brand-mark"><img src="/assets/img/logo-icon.png" alt="Lokaya">Lokaya</div>
+        <div class="receipt-ref">
+          <div><strong>Reçu N°</strong> ${escapeHtml(booking.code)}</div>
+          <div>Émis le ${formatDate(new Date().toISOString())}</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:18px"><span class="receipt-status">✓ Paiement confirmé</span></div>
+
+      <div class="receipt-section">
+        <h3>Client</h3>
+        <div class="receipt-row"><span>Nom</span><strong>${escapeHtml(user.name)}</strong></div>
+        <div class="receipt-row"><span>Email</span><strong>${escapeHtml(user.email)}</strong></div>
+      </div>
+
+      <div class="receipt-section">
+        <h3>Logement</h3>
+        <div class="receipt-row"><span>Titre</span><strong>${escapeHtml(booking.room?.title || '')}</strong></div>
+        <div class="receipt-row"><span>Localisation</span><strong>${escapeHtml(booking.room?.city || '')}, ${escapeHtml(booking.room?.country || '')}</strong></div>
+        <div class="receipt-row"><span>Proposé par</span><strong>${escapeHtml(booking.room?.owner_name || 'Lokaya')}</strong></div>
+        <div class="receipt-row"><span>Période</span><strong>Du ${formatDate(booking.check_in)} au ${formatDate(booking.check_out)}</strong></div>
+      </div>
+
+      <div class="receipt-section">
+        <h3>Paiement</h3>
+        <div class="receipt-row"><span>${booking.nights} nuit(s) × ${Math.round(booking.price_per_night).toLocaleString('fr-FR')} FCFA ${periodLabel}</span><strong>${Math.round(booking.total_price).toLocaleString('fr-FR')} FCFA</strong></div>
+        <div class="receipt-row"><span>Méthode</span><strong>${p ? (METHOD_LABELS[p.method] || p.method) : '—'}</strong></div>
+        <div class="receipt-row"><span>Référence transaction</span><strong>${escapeHtml(p?.reference || '—')}</strong></div>
+        <div class="receipt-total"><span>Total payé</span><span>${Math.round(booking.total_price).toLocaleString('fr-FR')} FCFA</span></div>
+      </div>
+
+      ${booking.accepted_terms ? `
+      <div class="receipt-section">
+        <h3>Conditions acceptées par le client${booking.terms_accepted_at ? ' le ' + formatDate(booking.terms_accepted_at) : ''}</h3>
+        <div class="receipt-terms">${escapeHtml(booking.accepted_terms)}</div>
+      </div>` : ''}
+
+      <p class="receipt-legal">Ce document atteste qu'un paiement a été traité avec succès via la plateforme Lokaya pour la réservation référencée ci-dessus. Il ne constitue pas une quittance de loyer au sens légal du terme, celle-ci restant, le cas échéant, à la charge du bailleur. En cas de litige, ce reçu et les conditions acceptées ci-dessus font foi des termes convenus entre les parties au moment de la réservation.</p>
+    `;
+  } catch (err) {
+    el.innerHTML = `<p style="text-align:center;color:var(--clay)">${escapeHtml(err.message)}</p>`;
+  }
+}
+
+loadReceipt();
+</script>
+</body>
+</html>

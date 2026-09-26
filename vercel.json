@@ -1,0 +1,25 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://rentify-6yiw.onrender.com/api/:path*"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://rentify-6yiw.onrender.com/api/sitemap.xml"
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "/frontend/admin/:path*"
+    },
+    {
+      "source": "/assets/:path*",
+      "destination": "/frontend/assets/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/frontend/:path*"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confirmation d'email — Lokaya</title>
+<link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div id="app-header"></div>
+
+<div class="container" style="max-width:480px;padding:80px 24px;text-align:center">
+  <div id="verify-content">
+    <div class="spinner" style="margin:0 auto"></div>
+    <p style="margin-top:16px;color:var(--muted-text)">Vérification en cours…</p>
+  </div>
+</div>
+
+<div id="app-footer"></div>
+<script src="/assets/js/icons.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/i18n.js"></script>
+<script src="/assets/js/theme.js"></script>
+<script src="/assets/js/payment-icons.js"></script>
+<script src="/assets/js/layout.js"></script>
+<script src="/assets/js/notifications.js"></script>
+<script>
+mountLayout();
+(async () => {
+  const token = new URLSearchParams(window.location.search).get('token');
+  const el = document.getElementById('verify-content');
+  if (!token) { el.innerHTML = `<div style="font-size:40px">⚠️</div><h1 style="font-size:20px;margin-top:10px">Lien invalide</h1>`; return; }
+  try {
+    await api(`/auth/verify-email?token=${encodeURIComponent(token)}`, { auth: false });
+    el.innerHTML = `<div style="font-size:40px">✅</div><h1 style="font-size:20px;margin-top:10px">Email confirmé !</h1><p style="color:var(--muted-text);margin-top:8px">Ton adresse email est maintenant vérifiée.</p><a href="/dashboard.html" class="btn btn-dark" style="margin-top:20px">Aller à mon espace</a>`;
+    if (Auth.isLoggedIn()) { const u = Auth.getUser(); Auth.setUser({ ...u, email_verified: true }); }
+  } catch (err) {
+    el.innerHTML = `<div style="font-size:40px">⚠️</div><h1 style="font-size:20px;margin-top:10px">Lien invalide ou expiré</h1><p style="color:var(--muted-text);margin-top:8px">${err.message}</p>`;
+  }
+})();
+</script>
+</body>
+</html>
