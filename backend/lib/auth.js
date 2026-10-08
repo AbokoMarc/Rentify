@@ -15,7 +15,9 @@ function base64urlDecode(str) {
   return Buffer.from(str, 'base64').toString();
 }
 
-export function signToken(payload, expiresInSec = 60 * 60 * 24 * 7) {
+export const USER_SESSION_SEC = 60 * 60 * 24 * 30; // session visiteur : 30 jours, renouvelée à l'usage (voir requireAuth)
+
+export function signToken(payload, expiresInSec = USER_SESSION_SEC) {
   const header = { alg: 'HS256', typ: 'JWT' };
   const body = { ...payload, iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + expiresInSec };
   const h = base64url(JSON.stringify(header));
@@ -78,12 +80,23 @@ export function requireAuth(req, res) {
     res.end(JSON.stringify({ error: 'Non authentifié.', code: 'AUTH' }));
     return null;
   }
+  // Session glissante : tant que la personne utilise le site, son jeton est renouvelé (elle n'est plus déconnectée).
+  // Plafond absolu de 180 jours depuis la connexion initiale ; jamais pour les sessions admin (8 h strictes).
+  if (user.scope !== 'admin') {
+    const now = Math.floor(Date.now() / 1000);
+    const origin = user.t0 || user.iat || now;
+    if (user.exp - now < USER_SESSION_SEC - 24 * 3600 && now - origin < 180 * 24 * 3600) {
+      const { exp, iat, ...claims } = user;
+      res.setHeader('X-Refresh-Token', signToken({ ...claims, t0: origin }));
+    }
+  }
   return user;
 }
 
-function deny(res, status, error) {
+function deny(res, status, error, authFailure = false) {
   res.writeHead(status, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ error, code: 'AUTH' })); // « AUTH » : le front sait que la session n'est plus valable
+  // code « AUTH » = la session n'est plus valable (le front déconnecte). Un simple refus de permission (403) ne déconnecte PAS.
+  res.end(JSON.stringify(authFailure || status === 401 ? { error, code: 'AUTH' } : { error }));
   return null;
 }
 
@@ -122,6 +135,6 @@ export async function requireAdmin(req, res) {
   const auth = req.headers['authorization'];
   if (!auth || !auth.startsWith('Bearer ')) return deny(res, 401, 'Non authentifié.');
   const admin = await verifyAdminToken(auth.slice(7));
-  if (!admin) return deny(res, 403, 'Accès réservé aux administrateurs.');
+  if (!admin) return deny(res, 403, 'Accès réservé aux administrateurs.', true);
   return admin;
 }

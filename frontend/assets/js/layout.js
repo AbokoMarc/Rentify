@@ -293,6 +293,7 @@ function renderBottomNav(active = '') {
     search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
     heart: '<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.6-9.3-9A5.3 5.3 0 0 1 12 6.6 5.3 5.3 0 0 1 21.3 12C19 16.4 12 21 12 21z"/></svg>',
     user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>',
+    chat: '<svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>',
     store: '<svg viewBox="0 0 24 24"><path d="M4 9l1-5h14l1 5M4 9v11h16V9M4 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 4 0"/></svg>',
   };
   const isSeller = loggedIn && user && user.role === 'vendeur';
@@ -301,6 +302,7 @@ function renderBottomNav(active = '') {
     ${item('/index.html', 'home', 'Accueil', 'home')}
     ${item('/search.html', 'search', 'Explorer', 'search')}
     ${item(loggedIn ? '/dashboard.html#favoris' : '/login.html', 'favoris', 'Favoris', 'heart')}
+    ${loggedIn ? item('/messages.html', 'messages', 'Messages', 'chat') : ''}
     ${isSeller ? item('/vendeur.html', 'vendeur', 'Vendeur', 'store') : ''}
     ${item(loggedIn ? '/dashboard.html' : '/login.html', 'dashboard', 'Profil', 'user')}
   </nav>`;

@@ -15,6 +15,7 @@ import { handleNotifications } from './routes/notifications.js';
 import { handleAdminStats } from './routes/admin.js';
 import { handleAdminUsers } from './routes/admin-users.js';
 import { handleInquiries } from './routes/inquiries.js';
+import { handleChat } from './routes/chat.js';
 import { handleAdminAuth } from './routes/admin-auth.js';
 import { verifyAdminToken } from './lib/auth.js';
 import { setSecurityHeaders, parseCookies, ADMIN_COOKIE, clientIp, hit, tooMany } from './lib/security.js';
@@ -129,7 +130,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
-    const handlers = [handleAdminAuth, handleAuth, handleRooms, handleBookings, handlePayments, handleReviews, handleFavorites, handleNotifications, handleAdminStats, handleAdminUsers, handleInquiries];
+    const handlers = [handleAdminAuth, handleAuth, handleRooms, handleBookings, handlePayments, handleReviews, handleFavorites, handleNotifications, handleAdminStats, handleAdminUsers, handleInquiries, handleChat];
     for (const handler of handlers) {
       const result = await handler(req, res, urlPath, urlObj);
       if (result !== null && result !== undefined) return; // déjà traité

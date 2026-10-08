@@ -255,3 +255,10 @@ qs('avail-cal').addEventListener('click', (e) => {
 });
 ['bw-checkin', 'bw-checkout', 'bw-checkin-monthly'].forEach(id => qs(id).addEventListener('change', () => renderAvailCal()));
 loadAvailability();
+
+// Contacter l'hôte : ouvre (ou retrouve) la conversation puis va sur la messagerie
+qs('bw-contact').addEventListener('click', async () => {
+  if (!Auth.isLoggedIn()) { window.location.href = `/login.html?next=${encodeURIComponent('/room.html?id=' + roomId)}`; return; }
+  try { const { id } = await api('/conversations', { method: 'POST', body: { room_id: Number(roomId) } }); window.location.href = `/messages.html?c=${id}`; }
+  catch (err) { showToast('Impossible', err.message, 'warn'); }
+});

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Messages — Lokaya</title>
+<link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#F26A1B">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div id="app-header"></div>
+<div class="container chat-wrap">
+  <aside class="chat-list" id="chat-list"><div class="skeleton" style="height:70px;margin-bottom:10px"></div><div class="skeleton" style="height:70px"></div></aside>
+  <section class="chat-thread hidden-mobile" id="chat-thread">
+    <div class="chat-empty" id="chat-empty">Choisis une conversation pour afficher les messages.</div>
+    <div class="chat-box hidden" id="chat-box">
+      <header class="chat-head">
+        <button type="button" class="chat-back" id="chat-back" aria-label="Retour">←</button>
+        <div class="chat-avatar" id="chat-avatar"></div>
+        <div><strong id="chat-name"></strong><div id="chat-room" class="chat-room"></div></div>
+      </header>
+      <div class="chat-msgs" id="chat-msgs"></div>
+      <form class="chat-form" id="chat-form" autocomplete="off">
+        <input type="text" id="chat-input" maxlength="1000" placeholder="Écrire un message…" required>
+        <button type="submit" class="chat-send" aria-label="Envoyer">➤</button>
+      </form>
+    </div>
+  </section>
+</div>
+<script src="/assets/js/icons.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/i18n.js"></script>
+<script src="/assets/js/theme.js"></script>
+<script src="/assets/js/calculators.js"></script>
+<script src="/assets/js/cookies.js"></script>
+<script src="/assets/js/layout.js"></script>
+<script src="/assets/js/notifications.js"></script>
+<script src="/assets/js/messages.js"></script>
+</body>
+</html>

@@ -40,8 +40,14 @@ async function api(path, { method = 'GET', body, auth = true } = {}) {
   let data = {};
   try { data = await res.json(); } catch { /* réponse vide */ }
 
+  {
+    // Session glissante : le serveur renvoie un jeton frais tant que la personne utilise le site.
+    const fresh = res.headers.get('X-Refresh-Token');
+    if (fresh && auth && !window.location.pathname.startsWith('/admin')) Auth.setToken(fresh);
+  }
   if (!res.ok) {
-    if (auth && data.code === 'AUTH') { Auth.logout(); } // session invalide/expirée ou droits insuffisants (décidé par le serveur)
+    // Déconnexion UNIQUEMENT si le serveur dit que la session est invalide (401) — jamais pour un simple refus de permission.
+    if (auth && data.code === 'AUTH' && (res.status === 401 || window.location.pathname.startsWith('/admin'))) { Auth.logout(); } // session invalide/expirée ou droits insuffisants (décidé par le serveur)
     throw new Error(data.error || `Erreur ${res.status}`);
   }
   return data;

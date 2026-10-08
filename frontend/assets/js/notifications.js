@@ -5,6 +5,7 @@ const NOTIF_LABELS = {
   paiement_rejete: { icon: '⚠️', cls: 'warn' },
   reservation_maj: { icon: '📅', cls: '' },
   reservation_annulee: { icon: '✖️', cls: 'warn' },
+  nouveau_message: { icon: '💬', cls: '' },
 };
 
 function ensureToastStack() {
