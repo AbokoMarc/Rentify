@@ -4,7 +4,7 @@ import { requireAdmin } from '../lib/auth.js';
 
 export async function handleAdminStats(req, res, urlPath) {
   if (urlPath === '/api/admin/stats' && req.method === 'GET') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
 
     const [totalRooms, activeRooms, totalBookings, pendingBookings, confirmedBookings, totalRevenueRow, pendingPayments, totalUsers, revenueByMethod, topRooms] = await Promise.all([
@@ -37,7 +37,7 @@ export async function handleAdminStats(req, res, urlPath) {
 
   // GET /api/admin/users
   if (urlPath === '/api/admin/users' && req.method === 'GET') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const users = await db.prepare(`SELECT id, name, email, phone, role, loyalty_points, created_at FROM users ORDER BY created_at DESC`).all();
     return json(res, 200, { users });

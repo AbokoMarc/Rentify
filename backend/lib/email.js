@@ -11,6 +11,8 @@
 // Sans ces variables, l'app continue de fonctionner normalement : la vérification d'email est
 // simplement désactivée (email_verified reste à 0, sans bloquer quoi que ce soit).
 
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+
 export function isEmailConfigured() {
   return !!(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
 }
@@ -45,7 +47,7 @@ export async function sendVerificationEmail(user, token, baseUrl) {
     to: user.email,
     subject: 'Confirme ton adresse email — Lokaya',
     html: emailShell('Confirme ton adresse email', `
-      <p>Bonjour ${user.name},</p>
+      <p>Bonjour ${esc(user.name)},</p>
       <p>Merci de t'être inscrit(e) sur Lokaya. Clique sur le bouton ci-dessous pour confirmer ton adresse email :</p>
       <p style="margin:24px 0"><a href="${link}" style="background:#C9781E;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Confirmer mon email</a></p>
       <p style="font-size:13px;color:#777">Si le bouton ne fonctionne pas, copie ce lien dans ton navigateur : ${link}</p>
@@ -58,10 +60,23 @@ export async function sendTempPasswordEmail(user, tempPassword) {
     to: user.email,
     subject: 'Ton nouveau mot de passe temporaire — Lokaya',
     html: emailShell('Nouveau mot de passe temporaire', `
-      <p>Bonjour ${user.name},</p>
+      <p>Bonjour ${esc(user.name)},</p>
       <p>Voici ton mot de passe temporaire pour te reconnecter à Lokaya :</p>
       <p style="margin:20px 0;font-size:20px;font-weight:700;letter-spacing:1px;background:#F1E3CC;padding:14px;border-radius:8px;text-align:center">${tempPassword}</p>
       <p>Il te sera demandé de le changer dès ta prochaine connexion, pour ta sécurité.</p>
+    `),
+  });
+}
+
+export async function sendPasswordResetEmail(user, link) {
+  await sendEmail({
+    to: user.email,
+    subject: 'Réinitialise ton mot de passe — Lokaya',
+    html: emailShell('Réinitialisation du mot de passe', `
+      <p>Bonjour ${esc(user.name)},</p>
+      <p>Tu as demandé à changer ton mot de passe. Ce lien est valable <strong>30 minutes</strong> et ne fonctionne qu'une seule fois :</p>
+      <p style="margin:24px 0"><a href="${esc(link)}" style="background:#C9781E;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Choisir un nouveau mot de passe</a></p>
+      <p style="font-size:13px;color:#777">Si tu n'es pas à l'origine de cette demande, ignore cet email : ton mot de passe actuel reste valable.</p>
     `),
   });
 }

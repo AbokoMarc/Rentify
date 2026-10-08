@@ -15,7 +15,7 @@ function generateTempPassword() {
 async function requireAdminReauth(req, res, admin, providedPassword) {
   const adminRow = await db.prepare('SELECT * FROM users WHERE id = ?').get(admin.id);
   if (!providedPassword || !verifyPassword(providedPassword, adminRow.password_hash)) {
-    json(res, 401, { error: 'Mot de passe administrateur incorrect. Action refusée.' });
+    json(res, 400, { error: 'Mot de passe administrateur incorrect. Action refusée.' });
     return false;
   }
   return true;
@@ -27,7 +27,7 @@ export async function handleAdminUsers(req, res, urlPath) {
   // POST /api/admin/users/:id/sensitive — voir les infos sensibles d'un client (re-authentification requise)
   const sensitiveMatch = urlPath.match(/^\/api\/admin\/users\/(\d+)\/sensitive$/);
   if (sensitiveMatch && req.method === 'POST') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const { admin_password } = await parseBody(req);
     if (!(await requireAdminReauth(req, res, admin, admin_password))) return;
@@ -55,7 +55,7 @@ export async function handleAdminUsers(req, res, urlPath) {
 
   // PUT /api/admin/change-password — l'admin change son propre mot de passe (nécessite l'ancien)
   if (urlPath === '/api/admin/change-password' && req.method === 'PUT') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const { current_password, new_password } = await parseBody(req);
     if (!current_password || !new_password) return json(res, 400, { error: 'Mot de passe actuel et nouveau requis.' });
@@ -69,7 +69,7 @@ export async function handleAdminUsers(req, res, urlPath) {
   // POST /api/admin/users/:id/reset-password — génère un nouveau mot de passe temporaire (re-authentification requise)
   const resetMatch = urlPath.match(/^\/api\/admin\/users\/(\d+)\/reset-password$/);
   if (resetMatch && req.method === 'POST') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const { admin_password } = await parseBody(req);
     if (!(await requireAdminReauth(req, res, admin, admin_password))) return;
@@ -94,7 +94,7 @@ export async function handleAdminUsers(req, res, urlPath) {
 
   // GET /api/admin/sellers — tous les vendeurs (quel que soit leur statut), avec le nombre d'annonces de chacun
   if (urlPath === '/api/admin/sellers' && req.method === 'GET') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const rows = await db.prepare(`
       SELECT users.id, users.name, users.email, users.phone, users.city, users.vendeur_statut, users.created_at,
@@ -107,7 +107,7 @@ export async function handleAdminUsers(req, res, urlPath) {
 
   // GET /api/admin/sellers/pending — comptes vendeur en attente de validation
   if (urlPath === '/api/admin/sellers/pending' && req.method === 'GET') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const rows = await db.prepare(`SELECT id, name, email, phone, city, created_at FROM users WHERE role = 'vendeur' AND vendeur_statut = 'en_attente' ORDER BY created_at ASC`).all();
     return json(res, 200, { sellers: rows });
@@ -115,7 +115,7 @@ export async function handleAdminUsers(req, res, urlPath) {
 
   const approveSellerMatch = urlPath.match(/^\/api\/admin\/sellers\/(\d+)\/approve$/);
   if (approveSellerMatch && req.method === 'PUT') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(approveSellerMatch[1]);
     if (!user) return notFound(res);
@@ -126,7 +126,7 @@ export async function handleAdminUsers(req, res, urlPath) {
 
   const rejectSellerMatch = urlPath.match(/^\/api\/admin\/sellers\/(\d+)\/reject$/);
   if (rejectSellerMatch && req.method === 'PUT') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(rejectSellerMatch[1]);
     if (!user) return notFound(res);

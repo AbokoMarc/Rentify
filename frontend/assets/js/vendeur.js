@@ -63,6 +63,9 @@ async function loadListings() {
   try {
     const { rooms } = await api('/rooms/mine');
     myListings = rooms;
+    qs('vt-total').textContent = rooms.length;
+    qs('vt-pending').textContent = rooms.filter(r => r.approval_status === 'en_attente').length;
+    qs('vt-live').textContent = rooms.filter(r => r.approval_status === 'approuve').length;
     qs('listings-grid').innerHTML = rooms.length
       ? rooms.map(listingCard).join('')
       : `<p style="color:var(--muted-text);text-align:center;padding:30px">Aucune annonce pour l'instant. Clique sur "Proposer une annonce" pour commencer.</p>`;
@@ -148,3 +151,31 @@ qs('listing-form').addEventListener('submit', async (e) => {
 });
 
 showSellerState();
+
+
+// ---- Publication en 4 étapes (le formulaire et son envoi restent identiques) ----
+let lmStep = 1;
+function showLmStep(n) {
+  lmStep = Math.min(4, Math.max(1, n));
+  document.querySelectorAll('#listing-form .lm-step').forEach(el => el.classList.toggle('hidden', Number(el.dataset.step) !== lmStep));
+  qs('lm-step-label').textContent = `Étape ${lmStep}/4`;
+  document.querySelectorAll('.stepper-bar i').forEach((bar, i) => bar.classList.toggle('on', i < lmStep));
+  qs('lm-prev').classList.toggle('hidden', lmStep === 1);
+  qs('lm-next').classList.toggle('hidden', lmStep === 4);
+  qs('listing-form-submit').classList.toggle('hidden', lmStep !== 4);
+}
+qs('lm-next').addEventListener('click', () => {
+  // Valide uniquement les champs de l'étape courante avant de passer à la suivante
+  const fields = document.querySelectorAll(`#listing-form .lm-step[data-step="${lmStep}"] input, #listing-form .lm-step[data-step="${lmStep}"] select, #listing-form .lm-step[data-step="${lmStep}"] textarea`);
+  for (const f of fields) if (!f.reportValidity()) return;
+  showLmStep(lmStep + 1);
+});
+qs('lm-prev').addEventListener('click', () => showLmStep(lmStep - 1));
+// Chaque ouverture du formulaire repart de l'étape 1
+new MutationObserver(() => { if (!qs('listing-modal-overlay').classList.contains('hidden')) showLmStep(1); })
+  .observe(qs('listing-modal-overlay'), { attributes: true, attributeFilter: ['class'] });
+showLmStep(1);
+// Entrée dans un champ = « Suivant » (et non envoi prématuré du formulaire)
+qs('listing-form').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && lmStep < 4) { e.preventDefault(); qs('lm-next').click(); }
+});

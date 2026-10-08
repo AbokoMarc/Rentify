@@ -11,7 +11,7 @@
     },
     {
       "source": "/admin/:path*",
-      "destination": "/frontend/admin/:path*"
+      "destination": "https://rentify-6yiw.onrender.com/admin/:path*"
     },
     {
       "source": "/assets/:path*",

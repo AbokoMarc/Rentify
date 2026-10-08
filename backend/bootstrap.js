@@ -13,7 +13,13 @@ export async function bootstrapAdmin() {
 
   const existing = await db.prepare('SELECT id, role FROM users WHERE email = ?').get(email.toLowerCase());
   if (existing) {
-    if (existing.role !== 'admin') await db.prepare(`UPDATE users SET role = 'admin' WHERE id = ?`).run(existing.id);
+    if (existing.role !== 'admin') {
+      // SÉCURITÉ : si quelqu'un s'est inscrit avec l'email admin avant le premier démarrage, on ne lui donne pas
+      // les droits avec SON mot de passe — on impose celui défini dans ADMIN_PASSWORD (variable d'environnement).
+      await db.prepare(`UPDATE users SET role = 'admin', password_hash = ?, must_change_password = 0 WHERE id = ?`)
+        .run(hashPassword(password), existing.id);
+      console.warn(`⚠️  ${email} existait comme compte normal : promu admin et mot de passe remplacé par ADMIN_PASSWORD.`);
+    }
     return;
   }
 

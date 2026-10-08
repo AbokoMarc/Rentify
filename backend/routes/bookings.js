@@ -30,6 +30,8 @@ export async function handleBookings(req, res, urlPath) {
     const b = await parseBody(req);
     const { room_id, check_in, check_out, adults, children, special_requests, promo_code, travel_purpose, accept_terms } = b;
     if (!room_id || !check_in || !check_out) return json(res, 400, { error: 'Logement et dates requis.' });
+    if (isNaN(new Date(check_in)) || isNaN(new Date(check_out))) return json(res, 400, { error: 'Dates invalides.' });
+    if (new Date(check_in) < new Date(new Date().toISOString().slice(0, 10))) return json(res, 400, { error: "La date d'arrivée ne peut pas être dans le passé." });
     if (new Date(check_out) <= new Date(check_in)) return json(res, 400, { error: 'La date de départ doit être après la date d\'arrivée.' });
 
     const room = await db.prepare('SELECT * FROM rooms WHERE id = ?').get(room_id);
@@ -51,7 +53,7 @@ export async function handleBookings(req, res, urlPath) {
     if (promo_code) {
       const promo = await db.prepare('SELECT * FROM promo_codes WHERE code = ? AND active = 1').get(promo_code.toUpperCase());
       if (promo && (!promo.expires_at || new Date(promo.expires_at) > new Date())) {
-        total = total * (1 - promo.percent_off / 100);
+        total = total * (1 - Math.min(Math.max(Number(promo.percent_off) || 0, 0), 100) / 100);
       }
     }
 
@@ -78,7 +80,7 @@ export async function handleBookings(req, res, urlPath) {
 
   // GET /api/admin/bookings — toutes les réservations (admin)
   if (urlPath === '/api/admin/bookings' && req.method === 'GET') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const rows = await db.prepare(`
       SELECT bookings.*, users.name as client_name, users.email as client_email, users.phone as client_phone
@@ -96,6 +98,7 @@ export async function handleBookings(req, res, urlPath) {
     const booking = await db.prepare('SELECT * FROM bookings WHERE id = ?').get(cancelMatch[1]);
     if (!booking) return notFound(res);
     if (user.role !== 'admin' && booking.user_id !== user.id) return json(res, 403, { error: 'Non autorisé.' });
+    if (['annulee', 'terminee'].includes(booking.status) && user.role !== 'admin') return json(res, 409, { error: 'Cette réservation ne peut plus être annulée.' });
     await db.prepare(`UPDATE bookings SET status = 'annulee' WHERE id = ?`).run(cancelMatch[1]);
     const updated = await db.prepare('SELECT * FROM bookings WHERE id = ?').get(cancelMatch[1]);
     if (user.role === 'admin') {
@@ -109,7 +112,7 @@ export async function handleBookings(req, res, urlPath) {
   // PUT /api/admin/bookings/:id/status — confirmer / terminer (admin)
   const statusMatch = urlPath.match(/^\/api\/admin\/bookings\/(\d+)\/status$/);
   if (statusMatch && req.method === 'PUT') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const { status } = await parseBody(req);
     if (!['en_attente', 'confirmee', 'annulee', 'terminee'].includes(status)) return json(res, 400, { error: 'Statut invalide.' });

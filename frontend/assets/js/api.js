@@ -11,8 +11,19 @@ const Auth = {
   setUser(u) { localStorage.setItem('lokaya_user', JSON.stringify(u)); localStorage.removeItem('rentify_user'); localStorage.removeItem('roomia_user'); },
   clearUser() { localStorage.removeItem('lokaya_user'); localStorage.removeItem('rentify_user'); localStorage.removeItem('roomia_user'); },
   isLoggedIn() { return !!this.getToken(); },
+  // ⚠️ INDICE D'INTERFACE UNIQUEMENT : lit le localStorage, donc modifiable par n'importe qui. Ne protège rien.
+  // La vraie vérification admin est faite par le serveur (voir verifyAdminSession et /api/admin/verify).
   isAdmin() { return this.getUser()?.role === 'admin'; },
-  logout() { this.clearToken(); this.clearUser(); window.location.href = '/index.html'; },
+  logout() {
+    const wasAdmin = this.isAdmin() || window.location.pathname.startsWith('/admin');
+    this.clearToken(); this.clearUser();
+    if (wasAdmin) {
+      // Efface aussi le cookie de session admin (HttpOnly, donc supprimable uniquement par le serveur).
+      fetch('/api/admin/logout', { method: 'POST' }).catch(() => {}).finally(() => { window.location.href = '/admin/login.html'; });
+      return;
+    }
+    window.location.href = '/index.html';
+  },
 };
 
 async function api(path, { method = 'GET', body, auth = true } = {}) {
@@ -30,7 +41,7 @@ async function api(path, { method = 'GET', body, auth = true } = {}) {
   try { data = await res.json(); } catch { /* réponse vide */ }
 
   if (!res.ok) {
-    if (res.status === 401 && auth) { Auth.logout(); }
+    if (auth && data.code === 'AUTH') { Auth.logout(); } // session invalide/expirée ou droits insuffisants (décidé par le serveur)
     throw new Error(data.error || `Erreur ${res.status}`);
   }
   return data;
@@ -41,9 +52,25 @@ function requireAuthOrRedirect(redirectTo = '/login.html') {
   return true;
 }
 
+// Contrôle rapide d'interface (évite d'afficher une page vide) — NE FAIT PAS FOI.
 function requireAdminOrRedirect() {
-  if (!Auth.isLoggedIn() || !Auth.isAdmin()) { window.location.href = '/login.html'; return false; }
+  if (!Auth.isLoggedIn()) { window.location.href = '/admin/login.html'; return false; }
   return true;
+}
+
+// Vérification qui fait foi : le serveur relit le jeton ET le rôle en base. Une fausse valeur dans le
+// localStorage échoue ici. La page reste masquée tant que la réponse n'est pas « ok ».
+async function verifyAdminSession() {
+  // fetch direct (et non api()) : un refus ne doit pas déclencher la déconnexion automatique en boucle.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const r = await fetch('/api/admin/verify', { headers: { Authorization: `Bearer ${Auth.getToken() || ''}` }, cache: 'no-store' });
+      if (r.status === 401 || r.status === 403) return false;      // refus explicite du serveur
+      if (r.ok) return true;
+    } catch { /* serveur qui se réveille (hébergement gratuit) : on réessaie */ }
+    await new Promise(res => setTimeout(res, 2000));
+  }
+  return false; // fail-closed
 }
 
 // Export CSV générique — utilisé par les pages admin pour télécharger un historique (réservations, paiements...).

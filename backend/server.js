@@ -15,6 +15,9 @@ import { handleNotifications } from './routes/notifications.js';
 import { handleAdminStats } from './routes/admin.js';
 import { handleAdminUsers } from './routes/admin-users.js';
 import { handleInquiries } from './routes/inquiries.js';
+import { handleAdminAuth } from './routes/admin-auth.js';
+import { verifyAdminToken } from './lib/auth.js';
+import { setSecurityHeaders, parseCookies, ADMIN_COOKIE, clientIp, hit, tooMany } from './lib/security.js';
 import { bootstrapAdmin } from './bootstrap.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -30,14 +33,43 @@ const MIME = {
   '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.woff2': 'font/woff2',
 };
 
-function serveStatic(req, res, urlPath) {
-  let filePath = urlPath === '/' ? '/index.html' : urlPath;
-  filePath = path.join(FRONTEND_DIR, filePath);
-  if (!filePath.startsWith(FRONTEND_DIR)) { res.writeHead(403); return res.end(); }
+// Pages admin : accessibles UNIQUEMENT avec une session admin valide (cookie HttpOnly vérifié côté serveur).
+// Sans session : réponse 404 identique à une page inexistante (on ne révèle même pas que l'espace admin existe).
+// Exception : la page de connexion admin elle-même.
+const ADMIN_PUBLIC_PAGES = new Set(['/admin/login.html', '/admin/login']);
+
+async function isAdminSession(req) {
+  const token = parseCookies(req)[ADMIN_COOKIE];
+  if (!token) return false;
+  return !!(await verifyAdminToken(token));
+}
+
+async function serveStatic(req, res, urlPath) {
+  let decoded;
+  try { decoded = decodeURIComponent(urlPath); } catch { res.writeHead(400); return res.end(); }
+  if (decoded.includes('\0')) { res.writeHead(400); return res.end(); }
+
+  let rel = decoded === '/' ? '/index.html' : decoded;
+
+  // Fichiers cachés interdits (.env, .git...) — seul /.well-known/ (assetlinks.json) est autorisé.
+  if (/(^|\/)\.(?!well-known(\/|$))/.test(rel)) { res.writeHead(404); return res.end('Fichier introuvable'); }
+
+  const isAdminPath = rel === '/admin' || rel.startsWith('/admin/');
+  if (isAdminPath) {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    res.setHeader('Cache-Control', 'no-store');
+    if (!ADMIN_PUBLIC_PAGES.has(rel) && !(await isAdminSession(req))) {
+      res.writeHead(404); return res.end('Page introuvable');
+    }
+  }
+
+  const filePath = path.resolve(FRONTEND_DIR, '.' + rel);
+  const root = path.resolve(FRONTEND_DIR) + path.sep;
+  if (!filePath.startsWith(root)) { res.writeHead(403); return res.end(); }
 
   fs.readFile(filePath, (err, data) => {
     if (err) {
-      // fallback SPA-like : pages sans extension -> tente .html, sinon 404
+      // fallback : pages sans extension -> tente .html, sinon 404
       if (!path.extname(filePath)) {
         return fs.readFile(filePath + '.html', (err2, data2) => {
           if (err2) { res.writeHead(404); return res.end('Page introuvable'); }
@@ -57,18 +89,32 @@ const server = http.createServer(async (req, res) => {
   const urlObj = new URL(req.url, `http://${req.headers.host}`);
   const urlPath = urlObj.pathname;
 
+  setSecurityHeaders(res);
+
+  // CORS : le front appelle l'API en même origine (via le proxy Vercel) — aucun accès cross-origin par défaut.
+  // Pour autoriser un domaine précis, définir CORS_ORIGIN (ex : https://lokaya.cm). Jamais « * ».
   if (req.method === 'OPTIONS') {
-    res.writeHead(204, {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    });
+    const allowed = process.env.CORS_ORIGIN;
+    if (allowed && req.headers.origin === allowed) {
+      res.writeHead(204, {
+        'Access-Control-Allow-Origin': allowed,
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Vary': 'Origin',
+      });
+    } else {
+      res.writeHead(204);
+    }
     return res.end();
   }
 
   if (!urlPath.startsWith('/api/')) {
     return serveStatic(req, res, urlPath);
   }
+
+  // Limite globale anti-abus : 300 requêtes API / minute / IP.
+  const rl = hit(`api:${clientIp(req)}`, 300, 60 * 1000);
+  if (!rl.allowed) return tooMany(res, rl.retryAfterSec);
 
   if (urlPath === '/api/sitemap.xml' && req.method === 'GET') {
     const BASE = process.env.PUBLIC_SITE_URL || 'https://frontend-woad-gamma-91.vercel.app';
@@ -83,7 +129,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
-    const handlers = [handleAuth, handleRooms, handleBookings, handlePayments, handleReviews, handleFavorites, handleNotifications, handleAdminStats, handleAdminUsers, handleInquiries];
+    const handlers = [handleAdminAuth, handleAuth, handleRooms, handleBookings, handlePayments, handleReviews, handleFavorites, handleNotifications, handleAdminStats, handleAdminUsers, handleInquiries];
     for (const handler of handlers) {
       const result = await handler(req, res, urlPath, urlObj);
       if (result !== null && result !== undefined) return; // déjà traité

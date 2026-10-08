@@ -41,7 +41,7 @@ export async function handleInquiries(req, res, urlPath) {
 
   // GET /api/admin/inquiries — toutes les demandes (admin)
   if (urlPath === '/api/admin/inquiries' && req.method === 'GET') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const rows = await db.prepare(`
       SELECT property_inquiries.*, users.name as client_name, users.email as client_email, users.phone as client_phone
@@ -83,7 +83,7 @@ export async function handleInquiries(req, res, urlPath) {
   // avec le message, ET peut y répondre à son tour depuis son tableau de bord (fil de discussion complet).
   const replyMatch = urlPath.match(/^\/api\/admin\/inquiries\/(\d+)\/reply$/);
   if (replyMatch && req.method === 'PUT') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const { message } = await parseBody(req);
     if (!message || !message.trim()) return json(res, 400, { error: 'Le message ne peut pas être vide.' });
@@ -101,7 +101,7 @@ export async function handleInquiries(req, res, urlPath) {
   // PUT /api/admin/inquiries/:id/status — changer le statut d'une demande
   const statusMatch = urlPath.match(/^\/api\/admin\/inquiries\/(\d+)\/status$/);
   if (statusMatch && req.method === 'PUT') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const { status, admin_note } = await parseBody(req);
     if (!['nouveau', 'en_discussion', 'traite', 'abandonne'].includes(status)) return json(res, 400, { error: 'Statut invalide.' });

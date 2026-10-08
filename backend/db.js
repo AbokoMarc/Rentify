@@ -252,6 +252,13 @@ await db.exec(`
 // `CREATE TABLE IF NOT EXISTS` ne modifie jamais une table déjà existante — sans ce bloc, une base
 // créée avant l'ajout d'une colonne ne la reçoit jamais, et toute requête qui la référence échoue (500).
 // Chaque ALTER TABLE est tenté séparément et son échec (colonne déjà existante) est silencieusement ignoré.
+await db.exec(`CREATE TABLE IF NOT EXISTS admin_login_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT, ip TEXT, success INTEGER NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now')));`);
+
+await db.exec(`CREATE TABLE IF NOT EXISTS password_resets (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, token_hash TEXT NOT NULL UNIQUE,
+  expires_at INTEGER NOT NULL, used INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (datetime('now')));`);
+
 const MIGRATIONS = [
   `ALTER TABLE rooms ADD COLUMN pricing_period TEXT NOT NULL DEFAULT 'nuit'`,
   `ALTER TABLE rooms ADD COLUMN furnished INTEGER`,

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accès administration — Lokaya</title>
+<link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+<meta name="theme-color" content="#241A12">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px">
+  <div style="background:white;border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:36px;width:100%;max-width:400px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <img src="/assets/img/logo-lokaya.svg" alt="" style="height:34px">
+      <strong style="font-size:20px">Lokaya</strong>
+      <span style="font-size:12px;background:var(--gold);color:var(--ink-deep);padding:3px 8px;border-radius:6px;font-weight:700">ADMIN</span>
+    </div>
+    <h1 style="font-size:22px">Accès administration</h1>
+    <p style="color:var(--muted-text);margin-top:6px;margin-bottom:22px;font-size:14px">Espace réservé aux administrateurs. Les tentatives sont enregistrées.</p>
+    <form id="admin-login-form" autocomplete="off">
+      <div class="field">
+        <label>Adresse e-mail</label>
+        <input type="email" id="email" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Mot de passe</label>
+        <input type="password" id="password" required autocomplete="current-password">
+      </div>
+      <div id="login-error" style="color:var(--clay);font-size:13px;margin-bottom:12px;display:none"></div>
+      <button type="submit" class="btn btn-primary btn-block" id="login-submit">Se connecter</button>
+    </form>
+  </div>
+</div>
+<script src="/assets/js/api.js"></script>
+<script>
+// Si une session admin valide existe déjà (vérifiée par le serveur), on va directement au tableau de bord.
+(async () => {
+  if (Auth.getToken() && await verifyAdminSession()) window.location.replace('/admin/admin-dashboard.html');
+})();
+
+document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('login-submit');
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  btn.disabled = true; btn.textContent = 'Connexion…';
+  try {
+    const { token, user } = await api('/admin/login', {
+      method: 'POST', auth: false,
+      body: { email: document.getElementById('email').value, password: document.getElementById('password').value },
+    });
+    Auth.setToken(token); Auth.setUser(user);
+    window.location.href = '/admin/admin-dashboard.html';
+  } catch (err) {
+    errEl.textContent = err.message; errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Se connecter';
+  }
+});
+</script>
+</body>
+</html>

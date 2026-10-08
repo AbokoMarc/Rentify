@@ -56,14 +56,15 @@ async function loadRoom() {
     qs('r-rating').innerHTML = room.reviews_count > 0
       ? `<span style="color:var(--gold-deep);font-weight:700">${starsHtml(room.rating)} ${room.rating}</span> <span style="color:var(--muted-text)">(${room.reviews_count} avis)</span>`
       : `<span style="color:var(--muted-text)">Pas encore d'avis</span>`;
-    qs('r-amenities').innerHTML = room.amenities.map(a => `<span class="amenity-chip">${AMENITY_ICONS[a] || '✓'} ${escapeHtml(a)}</span>`).join('') || '<p style="color:var(--muted-text)">Aucun équipement renseigné.</p>';
+    qs('r-amenities').innerHTML = room.amenities.map(a => `<span class="amenity-chip"><span class="am-ic">${AMENITY_ICONS[a] || '✓'}</span><span>${escapeHtml(a)}</span></span>`).join('') || '<p style="color:var(--muted-text)">Aucun équipement renseigné.</p>';
 
     if (room.rental_terms) {
       qs('bw-terms-box').classList.remove('hidden');
       qs('bw-terms-text').textContent = room.rental_terms;
     }
 
-    if (room.latitude != null && room.longitude != null) {
+    qs('sr-price').innerHTML = money(room.price_per_night, { compact: true, period: room.pricing_period });
+    if (room.latitude != null && room.longitude != null && typeof L !== 'undefined') { // carte facultative : si Leaflet ne charge pas, le reste de la page s'affiche quand même
       qs('r-map-section').classList.remove('hidden');
       const map = L.map('r-map', { scrollWheelZoom: false }).setView([room.latitude, room.longitude], 14);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -194,3 +195,63 @@ qs('r-verified-btn').addEventListener('click', () => {
     'success'
   );
 });
+
+// Barre « Réserver » fixe sur mobile : fait défiler jusqu'au formulaire de réservation
+qs('sr-btn').addEventListener('click', () => qs('bw-submit').closest('.booking-widget').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+
+
+// ---------- Calendrier de disponibilités ----------
+const availCal = { month: new Date(new Date().getFullYear(), new Date().getMonth(), 1), ranges: [], pick: null };
+const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+// Une nuit est prise si elle tombe dans [arrivée, départ[ — le jour de départ reste libre pour l'arrivée suivante.
+function isTaken(dayIso) { return availCal.ranges.some(r => dayIso >= r.from && dayIso < r.to); }
+
+function renderAvailCal() {
+  const y = availCal.month.getFullYear(), m = availCal.month.getMonth();
+  const first = new Date(y, m, 1), daysIn = new Date(y, m + 1, 0).getDate();
+  const offset = (first.getDay() + 6) % 7; // semaine commençant le lundi
+  const today = iso(new Date());
+  const ci = isMonthly() ? qs('bw-checkin-monthly').value : qs('bw-checkin').value;
+  const co = isMonthly() ? '' : qs('bw-checkout').value;
+  let cells = '';
+  for (let i = 0; i < offset; i++) cells += '<span></span>';
+  for (let d = 1; d <= daysIn; d++) {
+    const dIso = iso(new Date(y, m, d));
+    const past = dIso < today, taken = isTaken(dIso);
+    const sel = dIso === ci || dIso === co, inRange = ci && co && dIso > ci && dIso < co;
+    const cls = ['cal-day', taken ? 'taken' : '', past ? 'past' : '', sel ? 'sel' : '', inRange ? 'range' : ''].join(' ');
+    cells += `<button type="button" class="${cls}" data-date="${dIso}" ${past || taken ? 'disabled' : ''}>${d}</button>`;
+  }
+  qs('avail-cal').innerHTML = `
+    <div class="cal-head"><button type="button" id="cal-prev" aria-label="Mois précédent">←</button><strong>${MONTHS_FR[m]} ${y}</strong><button type="button" id="cal-next" aria-label="Mois suivant">→</button></div>
+    <div class="cal-grid cal-dow">${['LUN','MAR','MER','JEU','VEN','SAM','DIM'].map(x => `<span>${x}</span>`).join('')}</div>
+    <div class="cal-grid">${cells}</div>
+    <div class="cal-legend"><span><i class="lg free"></i>Libre</span><span><i class="lg taken"></i>Réservé</span><span><i class="lg sel"></i>Votre choix</span></div>`;
+}
+
+async function loadAvailability() {
+  try { availCal.ranges = (await api(`/rooms/${roomId}/booked-dates`, { auth: false })).ranges; } catch { availCal.ranges = []; }
+  renderAvailCal();
+}
+
+qs('avail-cal').addEventListener('click', (e) => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.id === 'cal-prev') { availCal.month = new Date(availCal.month.getFullYear(), availCal.month.getMonth() - 1, 1); return renderAvailCal(); }
+  if (t.id === 'cal-next') { availCal.month = new Date(availCal.month.getFullYear(), availCal.month.getMonth() + 1, 1); return renderAvailCal(); }
+  const date = t.dataset.date; if (!date) return;
+  const fire = (el, v) => { el.value = v; el.dispatchEvent(new Event('change', { bubbles: true })); };
+  if (isMonthly()) { fire(qs('bw-checkin-monthly'), date); }
+  else if (!availCal.pick) { availCal.pick = date; fire(qs('bw-checkin'), date); fire(qs('bw-checkout'), ''); }
+  else {
+    // si la période choisie englobe une nuit déjà réservée, on recommence au jour cliqué
+    const start = availCal.pick < date ? availCal.pick : date, end = availCal.pick < date ? date : availCal.pick;
+    const conflict = availCal.ranges.some(r => start < r.to && end > r.from);
+    if (date === availCal.pick || conflict) { availCal.pick = date; fire(qs('bw-checkin'), date); fire(qs('bw-checkout'), ''); }
+    else { availCal.pick = null; fire(qs('bw-checkin'), start); fire(qs('bw-checkout'), end); }
+  }
+  renderAvailCal();
+});
+['bw-checkin', 'bw-checkout', 'bw-checkin-monthly'].forEach(id => qs(id).addEventListener('change', () => renderAvailCal()));
+loadAvailability();

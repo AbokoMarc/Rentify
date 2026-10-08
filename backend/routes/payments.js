@@ -49,14 +49,14 @@ export async function handlePayments(req, res, urlPath) {
   }
 
   if (urlPath === '/api/admin/crypto-wallet' && req.method === 'GET') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const wallet = await db.prepare('SELECT address, network_note FROM crypto_wallet WHERE id = 1').get();
     return json(res, 200, { wallet: wallet || null });
   }
 
   if (urlPath === '/api/admin/crypto-wallet' && req.method === 'PUT') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const { address, network_note } = await parseBody(req);
     if (!address) return json(res, 400, { error: 'Adresse wallet requise.' });
@@ -74,7 +74,7 @@ export async function handlePayments(req, res, urlPath) {
     if (!user) return;
     if (!isCampayConfigured()) return json(res, 503, { error: "Le paiement Mobile Money n'est pas encore configuré. Contacte l'admin via WhatsApp." });
     const { booking_id, phone } = await parseBody(req);
-    if (!phone) return json(res, 400, { error: 'Numéro de téléphone Mobile Money requis.' });
+    if (!phone || !/^\+?\d{8,15}$/.test(String(phone).replace(/[\s.-]/g, ''))) return json(res, 400, { error: 'Numéro de téléphone Mobile Money invalide.' });
     const booking = await loadOwnedBooking(booking_id, user.id, res);
     if (!booking) return;
 
@@ -106,6 +106,9 @@ export async function handlePayments(req, res, urlPath) {
     if (!user) return;
     const payment = await db.prepare('SELECT * FROM payments WHERE reference = ?').get(campayStatusMatch[1]);
     if (!payment) return notFound(res);
+    // Seul le propriétaire de la réservation (ou un admin) peut interroger ce paiement.
+    const ownerRow = await db.prepare('SELECT user_id FROM bookings WHERE id = ?').get(payment.booking_id);
+    if (!ownerRow || (ownerRow.user_id !== user.id && user.role !== 'admin')) return notFound(res);
     if (payment.status === 'valide' || payment.status === 'echoue') return json(res, 200, { status: payment.status });
     try {
       const data = await checkCampayStatus(campayStatusMatch[1]);
@@ -143,11 +146,15 @@ export async function handlePayments(req, res, urlPath) {
     if (!user) return;
     const { booking_id, provider, reference } = await parseBody(req);
     if (!booking_id || !reference) return json(res, 400, { error: 'Réservation et hash de transaction requis.' });
+    if (typeof reference !== 'string' || reference.length < 8 || reference.length > 200) return json(res, 400, { error: 'Hash de transaction invalide.' });
     const booking = await loadOwnedBooking(booking_id, user.id, res);
     if (!booking) return;
+    // Un même hash de transaction ne peut pas servir à justifier deux réservations (rejeu / fraude).
+    const reused = await db.prepare(`SELECT id FROM payments WHERE reference = ? AND booking_id != ?`).get(reference.trim(), booking.id);
+    if (reused) return json(res, 409, { error: 'Ce hash de transaction a déjà été utilisé pour une autre réservation.' });
 
     const info = await db.prepare(`INSERT INTO payments (booking_id, method, provider, amount, currency, status, reference) VALUES (?, 'crypto', ?, ?, 'XAF', 'en_attente', ?)`)
-      .run(booking.id, provider || 'crypto', booking.total_price, reference);
+      .run(booking.id, String(provider || 'crypto').slice(0, 40), booking.total_price, reference.trim());
 
     await notifyAdmins('nouveau_paiement', 'Paiement crypto à vérifier', `Réservation ${booking.code} — ${formatXaf(booking.total_price)} — hash : ${reference}`, { booking_id: booking.id, payment_id: info.lastInsertRowid });
     return json(res, 201, { success: true });
@@ -155,7 +162,7 @@ export async function handlePayments(req, res, urlPath) {
 
   // ============ Admin : liste + validation/rejet des paiements ============
   if (urlPath === '/api/admin/payments' && req.method === 'GET') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const payments = await db.prepare(`
       SELECT payments.*, bookings.code as booking_code, users.name as client_name, users.email as client_email
@@ -169,7 +176,7 @@ export async function handlePayments(req, res, urlPath) {
 
   const validateMatch = urlPath.match(/^\/api\/admin\/payments\/(\d+)\/validate$/);
   if (validateMatch && req.method === 'PUT') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     await markPaymentValidated(validateMatch[1], 'Validation manuelle admin');
     return json(res, 200, { success: true });
@@ -177,7 +184,7 @@ export async function handlePayments(req, res, urlPath) {
 
   const rejectMatch = urlPath.match(/^\/api\/admin\/payments\/(\d+)\/reject$/);
   if (rejectMatch && req.method === 'PUT') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const { admin_note } = await parseBody(req);
     const payment = await db.prepare('SELECT * FROM payments WHERE id = ?').get(rejectMatch[1]);

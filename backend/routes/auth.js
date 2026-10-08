@@ -1,6 +1,7 @@
 import { db } from '../db.js';
 import { json, parseBody } from '../lib/http.js';
-import { hashPassword, verifyPassword, signToken, requireAuth } from '../lib/auth.js';
+import { hashPassword, verifyPassword, signToken, requireAuth, DUMMY_HASH } from '../lib/auth.js';
+import { clientIp, hit, peek, reset, tooMany } from '../lib/security.js';
 import { isEmailConfigured, sendVerificationEmail } from '../lib/email.js';
 import crypto from 'node:crypto';
 
@@ -14,17 +15,25 @@ function publicUser(u) {
 }
 
 function originOf(req) {
+  // PUBLIC_SITE_URL évite l'attaque par en-tête Host falsifié (lien de réinitialisation pointant vers un site pirate).
+  if (process.env.PUBLIC_SITE_URL) return process.env.PUBLIC_SITE_URL.replace(/\/$/, '');
   const proto = req.headers['x-forwarded-proto'] || 'https';
   return `${proto}://${req.headers.host}`;
 }
 
 export async function handleAuth(req, res, urlPath) {
   if (urlPath === '/api/auth/register' && req.method === 'POST') {
+    const rlReg = hit(`register:${clientIp(req)}`, 10, 60 * 60 * 1000); // 10 inscriptions / heure / IP
+    if (!rlReg.allowed) return tooMany(res, rlReg.retryAfterSec);
     const b = await parseBody(req);
     const { name, email, password, phone, country, address, city, postal_code, date_of_birth,
       nationality, id_document_type, id_document_number, default_travel_purpose, preferred_language, want_seller } = b;
     if (!name || !email || !password) return json(res, 400, { error: 'Nom, email et mot de passe requis.' });
-    if (password.length < 6) return json(res, 400, { error: 'Le mot de passe doit contenir au moins 6 caractères.' });
+    if (typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string') return json(res, 400, { error: 'Données invalides.' });
+    if (name.length > 100 || email.length > 200 || password.length > 200) return json(res, 400, { error: 'Données trop longues.' });
+    if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email)) return json(res, 400, { error: 'Adresse email invalide.' });
+    if (/[<>]/.test(name)) return json(res, 400, { error: 'Le nom contient des caractères non autorisés.' });
+    if (password.length < 8) return json(res, 400, { error: 'Le mot de passe doit contenir au moins 8 caractères.' });
     const existing = await db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase().trim());
     if (existing) return json(res, 409, { error: 'Un compte existe déjà avec cet email.' });
     const role = want_seller ? 'vendeur' : 'client';
@@ -95,7 +104,7 @@ export async function handleAuth(req, res, urlPath) {
     if (!authUser) return;
     const { current_password, new_password } = await parseBody(req);
     if (!current_password || !new_password) return json(res, 400, { error: 'Mot de passe actuel et nouveau requis.' });
-    if (new_password.length < 6) return json(res, 400, { error: 'Le nouveau mot de passe doit contenir au moins 6 caractères.' });
+    if (typeof new_password !== 'string' || new_password.length < 8 || new_password.length > 200) return json(res, 400, { error: 'Le nouveau mot de passe doit contenir au moins 8 caractères.' });
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(authUser.id);
     if (!verifyPassword(current_password, user.password_hash)) return json(res, 401, { error: 'Mot de passe actuel incorrect.' });
     await db.prepare(`UPDATE users SET password_hash = ?, must_change_password = 0 WHERE id = ?`).run(hashPassword(new_password), authUser.id);
@@ -106,15 +115,23 @@ export async function handleAuth(req, res, urlPath) {
   // mot de passe temporaire, sans attendre l'admin. Sinon : on notifie l'admin, qui peut le faire depuis
   // Espace admin > Clients > Réinitialiser. Pas de fuite d'info : réponse identique que l'email existe ou non.
   if (urlPath === '/api/auth/forgot-password' && req.method === 'POST') {
+    const rlFp = hit(`forgot:${clientIp(req)}`, 5, 60 * 60 * 1000); // 5 demandes / heure / IP
+    if (!rlFp.allowed) return tooMany(res, rlFp.retryAfterSec);
     const { email } = await parseBody(req);
-    if (email) {
+    if (email && typeof email === 'string') {
       const user = await db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase().trim());
-      if (user) {
+      const rlMail = hit(`forgot-mail:${email.toLowerCase().trim()}`, 3, 60 * 60 * 1000); // 3 / heure / compte : évite de spammer ou verrouiller une victime
+      // Les comptes ADMIN sont exclus : leur mot de passe ne se réinitialise jamais depuis le site public.
+      if (user && user.role !== 'admin' && rlMail.allowed) {
         if (isEmailConfigured()) {
-          const { sendTempPasswordEmail } = await import('../lib/email.js');
-          const tempPassword = crypto.randomBytes(6).toString('base64url'); // ex : 8 caractères lisibles
-          await db.prepare(`UPDATE users SET password_hash = ?, must_change_password = 1 WHERE id = ?`).run(hashPassword(tempPassword), user.id);
-          await sendTempPasswordEmail(user, tempPassword).catch(err => console.error('Erreur envoi email mot de passe:', err));
+          // Lien à usage unique (30 min). Le mot de passe actuel n'est PAS touché tant que le lien n'est pas utilisé :
+          // personne ne peut verrouiller le compte d'un autre en saisissant son email.
+          const { sendPasswordResetEmail } = await import('../lib/email.js');
+          const raw = crypto.randomBytes(32).toString('hex');
+          const hash = crypto.createHash('sha256').update(raw).digest('hex');
+          await db.prepare('UPDATE password_resets SET used = 1 WHERE user_id = ?').run(user.id);
+          await db.prepare('INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?, ?, ?)').run(user.id, hash, Date.now() + 30 * 60 * 1000);
+          await sendPasswordResetEmail(user, `${originOf(req)}/reset-password.html?token=${raw}`).catch(err => console.error('Erreur envoi email reset:', err));
         } else {
           const { notifyAdmins } = await import('../lib/notify.js');
           await notifyAdmins('mot_de_passe_oublie', 'Demande de mot de passe oublié', `${user.name} (${user.email}) a demandé la réinitialisation de son mot de passe.`, { user_id: user.id });
@@ -123,18 +140,46 @@ export async function handleAuth(req, res, urlPath) {
     }
     return json(res, 200, {
       message: isEmailConfigured()
-        ? "Si un compte existe avec cet email, un nouveau mot de passe temporaire vient de t'être envoyé par email."
+        ? "Si un compte existe avec cet email, un lien de réinitialisation valable 30 minutes vient de t'être envoyé."
         : "Si un compte existe avec cet email, l'administrateur a été prévenu et te contactera avec un nouveau mot de passe.",
     });
   }
 
+  // POST /api/auth/reset-password — { token, new_password } : consomme le lien reçu par email
+  if (urlPath === '/api/auth/reset-password' && req.method === 'POST') {
+    const rl = hit(`reset:${clientIp(req)}`, 10, 60 * 60 * 1000);
+    if (!rl.allowed) return tooMany(res, rl.retryAfterSec);
+    const { token, new_password } = await parseBody(req);
+    if (typeof token !== 'string' || typeof new_password !== 'string' || new_password.length < 8 || new_password.length > 200) {
+      return json(res, 400, { error: 'Le mot de passe doit contenir au moins 8 caractères.' });
+    }
+    const hash = crypto.createHash('sha256').update(token).digest('hex');
+    const row = await db.prepare('SELECT * FROM password_resets WHERE token_hash = ?').get(hash);
+    if (!row || row.used || row.expires_at < Date.now()) return json(res, 400, { error: 'Lien invalide ou expiré. Refais une demande.' });
+    const target = await db.prepare('SELECT id, role FROM users WHERE id = ?').get(row.user_id);
+    if (!target || target.role === 'admin') return json(res, 400, { error: 'Lien invalide ou expiré. Refais une demande.' });
+    await db.prepare('UPDATE users SET password_hash = ?, must_change_password = 0 WHERE id = ?').run(hashPassword(new_password), row.user_id);
+    await db.prepare('UPDATE password_resets SET used = 1 WHERE user_id = ?').run(row.user_id);
+    return json(res, 200, { success: true });
+  }
+
   if (urlPath === '/api/auth/login' && req.method === 'POST') {
     const { email, password } = await parseBody(req);
-    if (!email || !password) return json(res, 400, { error: 'Email et mot de passe requis.' });
-    const user = await db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase().trim());
-    if (!user || !verifyPassword(password, user.password_hash)) {
+    if (!email || !password || typeof email !== 'string' || typeof password !== 'string') return json(res, 400, { error: 'Email et mot de passe requis.' });
+    const mail = email.toLowerCase().trim().slice(0, 200);
+    const ip = clientIp(req);
+    const W = 15 * 60 * 1000;
+    // Verrouillage anti brute-force : 8 échecs / 15 min par email, 30 / 15 min par IP.
+    if (peek(`loginfail:email:${mail}`, W) >= 8 || peek(`loginfail:ip:${ip}`, W) >= 30) return tooMany(res, 900);
+    const user = await db.prepare('SELECT * FROM users WHERE email = ?').get(mail);
+    const passwordOk = verifyPassword(password, user ? user.password_hash : DUMMY_HASH); // même durée que l'email existe ou non
+    // Les comptes admin NE PEUVENT PAS se connecter ici : ils passent par la page de connexion admin séparée.
+    if (!user || !passwordOk || user.role === 'admin') {
+      hit(`loginfail:email:${mail}`, 8, W);
+      hit(`loginfail:ip:${ip}`, 30, W);
       return json(res, 401, { error: 'Email ou mot de passe incorrect.' });
     }
+    reset(`loginfail:email:${mail}`);
     const token = signToken({ id: user.id, role: user.role, name: user.name });
     return json(res, 200, { token, user: publicUser(user) });
   }
@@ -151,6 +196,10 @@ export async function handleAuth(req, res, urlPath) {
     const authUser = requireAuth(req, res);
     if (!authUser) return;
     const { name, phone, avatar } = await parseBody(req);
+    if (name && (typeof name !== 'string' || name.length > 100 || /[<>]/.test(name))) return json(res, 400, { error: 'Nom invalide.' });
+    if (avatar && (typeof avatar !== 'string' || avatar.length > 400000 || !/^(data:image\/(png|jpe?g|webp|gif);base64,|https:\/\/)/i.test(avatar))) {
+      return json(res, 400, { error: 'Photo de profil invalide.' });
+    }
     await db.prepare('UPDATE users SET name = COALESCE(?, name), phone = COALESCE(?, phone), avatar = COALESCE(?, avatar) WHERE id = ?')
       .run(name || null, phone || null, avatar || null, authUser.id);
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(authUser.id);

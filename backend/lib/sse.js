@@ -13,7 +13,6 @@ export function sseHandler(req, res, user) {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
     Connection: 'keep-alive',
-    'Access-Control-Allow-Origin': '*',
   });
   res.write('retry: 3000\n\n');
 

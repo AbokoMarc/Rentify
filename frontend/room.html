@@ -12,7 +12,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#241A12">
+<meta name="theme-color" content="#F26A1B">
 <link rel="stylesheet" href="/assets/css/style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
@@ -51,6 +51,9 @@
 
       <h3 style="margin-top:28px;margin-bottom:12px;font-size:18px" data-i18n="whats_included">Ce que propose ce logement</h3>
       <div id="r-amenities"></div>
+
+      <h3 style="margin-top:32px;margin-bottom:12px;font-size:18px">Disponibilités</h3>
+      <div id="avail-cal" class="avail-cal"></div>
 
       <div id="r-map-section" class="hidden">
         <h3 style="margin-top:32px;margin-bottom:12px;font-size:18px" data-i18n="location_title">Localisation</h3>
@@ -110,6 +113,8 @@
     </div>
   </div>
 </div>
+
+<div class="sticky-reserve"><div><div id="sr-price" style="font-weight:800;font-size:16px"></div></div><button class="btn btn-dark" id="sr-btn">Réserver</button></div>
 
 <div id="app-footer"></div>
 <script src="/assets/js/icons.js"></script>

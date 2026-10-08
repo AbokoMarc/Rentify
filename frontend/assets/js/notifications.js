@@ -82,18 +82,24 @@ function initNotificationBell() {
 
   refreshBadgeAndList();
 
-  // Flux temps réel
-  if (Auth.getToken()) {
-    const es = new EventSource(`/api/notifications/stream?token=${encodeURIComponent(Auth.getToken())}`);
-    es.addEventListener('notification', (e) => {
-      const notif = JSON.parse(e.data);
-      const meta = NOTIF_LABELS[notif.type] || { icon: '🔔', cls: '' };
-      showToast(`${meta.icon} ${notif.title}`, notif.message, meta.cls);
-      refreshBadgeAndList();
-      window.dispatchEvent(new CustomEvent('lokaya:notification', { detail: notif }));
-    });
-    es.onerror = () => { /* le navigateur retente automatiquement */ };
+  // Flux temps réel — authentifié par un ticket à usage unique (le jeton de session n'est jamais mis dans l'URL)
+  async function connectStream() {
+    if (!Auth.getToken()) return;
+    try {
+      const { ticket } = await api('/notifications/stream-ticket', { method: 'POST' });
+      const es = new EventSource(`/api/notifications/stream?ticket=${encodeURIComponent(ticket)}`);
+      es.addEventListener('notification', (e) => {
+        const notif = JSON.parse(e.data);
+        const meta = NOTIF_LABELS[notif.type] || { icon: '🔔', cls: '' };
+        showToast(`${meta.icon} ${notif.title}`, notif.message, meta.cls);
+        refreshBadgeAndList();
+        window.dispatchEvent(new CustomEvent('lokaya:notification', { detail: notif }));
+      });
+      // Le ticket est consommé : en cas de coupure on referme et on en redemande un nouveau.
+      es.onerror = () => { es.close(); setTimeout(connectStream, 5000); };
+    } catch { setTimeout(connectStream, 15000); }
   }
+  connectStream();
 }
 
 document.addEventListener('DOMContentLoaded', initNotificationBell);

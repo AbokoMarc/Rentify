@@ -44,9 +44,9 @@ function renderHeader(active = '') {
       <div class="np-body"></div>
     </div>
     ${sellerBadge}
-    <a href="${user.role === 'admin' ? '/admin/admin-dashboard.html' : '/dashboard.html'}" class="user-chip">
-      <span class="avatar">${(user.name || '?').slice(0, 1).toUpperCase()}</span>
-      <span style="font-size:14px;font-weight:600">${user.role === 'admin' ? 'Admin' : user.name.split(' ')[0]}</span>
+    <a href="/dashboard.html" class="user-chip">
+      <span class="avatar">${escapeHtml((user.name || '?').slice(0, 1).toUpperCase())}</span>
+      <span style="font-size:14px;font-weight:600">${escapeHtml((user.name || '').split(' ')[0])}</span>
     </a>
     <button class="btn btn-ghost btn-sm" id="logout-btn" data-i18n="logout">Déconnexion</button>
   ` : `
@@ -62,11 +62,11 @@ function renderHeader(active = '') {
     ${loggedIn ? `<a href="/dashboard.html" class="${active === 'dashboard' ? 'active' : ''}" data-i18n="nav_bookings">Mes réservations</a>` : ''}
     ${loggedIn ? `<a href="/dashboard.html#favoris" data-i18n="nav_favorites">Favoris</a>` : ''}
     ${loggedIn && isSeller ? `<a href="/vendeur.html" class="${active === 'vendeur' ? 'active' : ''}" data-i18n="nav_seller_space">Espace vendeur</a>` : ''}
-    ${loggedIn && !isSeller && user.role !== 'admin' ? `<a href="/vendeur.html" data-i18n="nav_become_seller">Devenir vendeur</a>` : ''}
+    ${loggedIn && !isSeller ? `<a href="/vendeur.html" data-i18n="nav_become_seller">Devenir vendeur</a>` : ''}
     <a href="${whatsappUrl()}" target="_blank" rel="noopener" data-i18n="contact_whatsapp">Discuter avec l'admin sur WhatsApp</a>
     <hr>
     ${loggedIn
-      ? `<a href="${user.role === 'admin' ? '/admin/admin-dashboard.html' : '/dashboard.html'}" data-i18n="${user.role === 'admin' ? 'admin_space' : 'my_profile'}">${user.role === 'admin' ? 'Espace admin' : 'Mon profil'}</a>
+      ? `<a href="/dashboard.html" data-i18n="my_profile">Mon profil</a>
          <button class="drawer-link" id="drawer-logout-btn" data-i18n="logout">Déconnexion</button>`
       : `<a href="/login.html" data-i18n="login">Se connecter</a><a href="/signup.html" data-i18n="signup">S'inscrire</a>`}
   `;
@@ -74,7 +74,7 @@ function renderHeader(active = '') {
   return `
   <header class="site-header">
     <div class="container">
-      <a href="/index.html" class="brand"><img src="/assets/img/logo-icon.png" alt="Lokaya" class="logo-mark">Lokaya</a>
+      <a href="/index.html" class="brand"><img src="/assets/img/logo-lokaya.svg" alt="Lokaya" class="logo-mark">Lokaya</a>
       <nav class="main-nav">
         ${navLink('/index.html', 'Accueil', 'home').replace('>Accueil<', ' data-i18n="nav_home">Accueil<')}
         ${navLink('/search.html', 'Explorer', 'search').replace('>Explorer<', ' data-i18n="nav_explore">Explorer<')}
@@ -103,7 +103,7 @@ function renderFooter() {
       <div class="footer-grid">
         <div>
           <div class="brand" style="color:white;margin-bottom:12px">
-            <img src="/assets/img/logo-icon.png" alt="Lokaya" class="logo-mark">Lokaya
+            <img src="/assets/img/logo-lokaya.svg" alt="Lokaya" class="logo-mark">Lokaya
           </div>
           <p style="font-size:14px;line-height:1.6;max-width:280px" data-i18n="footer_tagline">Réservez chambres, appartements et maisons partout au Cameroun. Paiement en Mobile Money. Achat et location de biens accompagnés par nos conseillers.</p>
         </div>
@@ -146,7 +146,7 @@ function renderAdminHeader(active = '') {
   return `
   <header class="site-header">
     <div class="container">
-      <a href="/admin/admin-dashboard.html" class="brand"><img src="/assets/img/logo-icon.png" alt="Lokaya" class="logo-mark">Lokaya <span style="font-size:12px;background:var(--gold);color:var(--ink-deep);padding:3px 8px;border-radius:6px;margin-left:6px;font-family:var(--font-body);font-weight:700">ADMIN</span></a>
+      <a href="/admin/admin-dashboard.html" class="brand"><img src="/assets/img/logo-lokaya.svg" alt="Lokaya" class="logo-mark">Lokaya <span style="font-size:12px;background:var(--gold);color:var(--ink-deep);padding:3px 8px;border-radius:6px;margin-left:6px;font-family:var(--font-body);font-weight:700">ADMIN</span></a>
       <nav class="main-nav">
         ${link('/admin/admin-dashboard.html', 'Tableau de bord', 'dash')}
         ${link('/admin/admin-rooms.html', 'Logements', 'rooms')}
@@ -162,7 +162,7 @@ function renderAdminHeader(active = '') {
         <button class="icon-btn" id="notif-bell" aria-label="Notifications">${ICONS.bell}<span class="badge-dot hidden" id="notif-badge">0</span></button>
         <div class="notif-panel hidden" id="notif-panel"><div class="np-head"><strong>Notifications</strong></div><div class="np-body"></div></div>
         <a href="/index.html" class="btn btn-ghost btn-sm"><span class="btn-label-full">Voir le site</span><span class="btn-label-short" style="display:none">🔗</span></a>
-        <a href="${user ? '/admin/admin-settings.html' : '#'}" class="user-chip"><span class="avatar">${(user?.name || 'A').slice(0, 1).toUpperCase()}</span></a>
+        <a href="${user ? '/admin/admin-settings.html' : '#'}" class="user-chip"><span class="avatar">${escapeHtml((user?.name || 'A').slice(0, 1).toUpperCase())}</span></a>
         <button class="btn btn-ghost btn-sm" id="logout-btn">Déconnexion</button>
         <button class="hamburger-btn" id="mobile-nav-btn" aria-label="Menu">${ICONS.menu}</button>
       </div>
@@ -227,6 +227,14 @@ function urlBase64ToUint8Array(base64String) {
 
 function mountAdminLayout(active = '') {
   if (!requireAdminOrRedirect()) return;
+  // La page reste MASQUÉE (voir <style>html{visibility:hidden}</style> dans chaque page admin) tant que le
+  // serveur n'a pas confirmé la session admin. Un rôle bricolé dans le localStorage n'affiche donc rien.
+  verifyAdminSession().then((ok) => {
+    if (ok) { document.documentElement.style.visibility = 'visible'; return; }
+    document.body.innerHTML = '';
+    Auth.clearToken(); Auth.clearUser();
+    window.location.replace('/admin/login.html');
+  });
   const headerMount = document.getElementById('app-header');
   if (headerMount) headerMount.outerHTML = renderAdminHeader(active);
   bindMobileNav();
@@ -246,7 +254,7 @@ function renderMustChangePasswordModal() {
       <p class="modal-sub">Un administrateur t'a communiqué un mot de passe temporaire. Choisis-en un nouveau pour continuer.</p>
       <form id="mcp-form">
         <div class="field"><label>Mot de passe temporaire (reçu)</label><input type="password" id="mcp-current" required></div>
-        <div class="field"><label>Nouveau mot de passe</label><input type="password" id="mcp-new" required minlength="6" placeholder="6 caractères minimum"></div>
+        <div class="field"><label>Nouveau mot de passe</label><input type="password" id="mcp-new" required minlength="8" placeholder="8 caractères minimum"></div>
         <div id="mcp-error" style="color:var(--clay);font-size:13px;margin-bottom:10px;display:none"></div>
         <button type="submit" class="btn btn-primary btn-block">Valider</button>
       </form>
@@ -277,12 +285,34 @@ function mountMustChangePasswordGate() {
   });
 }
 
+function renderBottomNav(active = '') {
+  const user = Auth.getUser();
+  const loggedIn = Auth.isLoggedIn();
+  const ic = {
+    home: '<svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+    search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+    heart: '<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.6-9.3-9A5.3 5.3 0 0 1 12 6.6 5.3 5.3 0 0 1 21.3 12C19 16.4 12 21 12 21z"/></svg>',
+    user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>',
+    store: '<svg viewBox="0 0 24 24"><path d="M4 9l1-5h14l1 5M4 9v11h16V9M4 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 4 0"/></svg>',
+  };
+  const isSeller = loggedIn && user && user.role === 'vendeur';
+  const item = (href, key, label, icon) => `<a href="${href}" class="${active === key ? 'active' : ''}">${ic[icon]}<span>${label}</span></a>`;
+  return `<nav class="bottom-nav" aria-label="Navigation principale">
+    ${item('/index.html', 'home', 'Accueil', 'home')}
+    ${item('/search.html', 'search', 'Explorer', 'search')}
+    ${item(loggedIn ? '/dashboard.html#favoris' : '/login.html', 'favoris', 'Favoris', 'heart')}
+    ${isSeller ? item('/vendeur.html', 'vendeur', 'Vendeur', 'store') : ''}
+    ${item(loggedIn ? '/dashboard.html' : '/login.html', 'dashboard', 'Profil', 'user')}
+  </nav>`;
+}
+
 function mountLayout(active = '') {
   const headerMount = document.getElementById('app-header');
   const footerMount = document.getElementById('app-footer');
   if (headerMount) headerMount.outerHTML = renderHeader(active);
   if (footerMount) footerMount.outerHTML = renderFooter();
   if (!document.getElementById('whatsapp-float')) document.body.insertAdjacentHTML('beforeend', renderWhatsappFloat());
+  if (!document.querySelector('.bottom-nav')) document.body.insertAdjacentHTML('beforeend', renderBottomNav(active));
   bindMobileNav();
 
   document.addEventListener('click', (e) => {

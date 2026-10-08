@@ -29,6 +29,7 @@ function bookingRowHtml(b) {
 async function loadBookings() {
   try {
     const { bookings } = await api('/bookings/mine');
+    qs('tile-bookings').textContent = bookings.filter(b => b.status !== 'annulee').length;
     qs('bookings-list').innerHTML = bookings.length
       ? bookings.map(bookingRowHtml).join('')
       : `<div class="empty-state"><i>🧳</i>Vous n'avez pas encore de réservation. <a href="/search.html" style="color:var(--ink);font-weight:600">Explorer les logements</a></div>`;
@@ -55,6 +56,7 @@ function openReview(roomId, bookingId) {
 async function loadFavoris() {
   try {
     const { rooms } = await api('/favorites');
+    qs('tile-favs').textContent = rooms.length;
     const DEFAULT_IMG = 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?q=80&w=600';
     qs('favoris-grid').innerHTML = rooms.length
       ? rooms.map(room => `
@@ -169,3 +171,14 @@ qs('resend-verify-btn').addEventListener('click', async () => {
     showToast('Envoyé', message, 'success');
   } catch (err) { showToast('Impossible pour le moment', err.message, 'warn'); }
 });
+
+// Bandeau d'accueil + tuiles (données issues du serveur, pas du localStorage)
+(async () => {
+  try {
+    const { user } = await api('/auth/me');
+    qs('dash-hello-title').textContent = `Bonjour, ${(user.name || '').split(' ')[0]}`; // textContent : pas d'injection HTML
+    qs('tile-points').textContent = user.loyalty_points ?? 0;
+    const badge = qs('dash-badge');
+    if (user.email_verified) { badge.className = 'kyc-badge'; badge.textContent = '✓ Email vérifié'; }
+  } catch { /* la redirection de session gère les erreurs d'authentification */ }
+})();

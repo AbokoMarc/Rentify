@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#241A12">
+<meta name="theme-color" content="#F26A1B">
 <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
@@ -41,7 +41,7 @@
   <div class="modal" style="max-width:400px">
     <button class="modal-close" id="forgot-modal-close">✕</button>
     <h2>Mot de passe oublié</h2>
-    <p class="modal-sub">Indique ton email : l'administrateur sera prévenu et te contactera avec un nouveau mot de passe.</p>
+    <p class="modal-sub">Indique ton email : tu recevras un lien pour choisir un nouveau mot de passe (ou l'administrateur te contactera si l'email n'est pas encore activé).</p>
     <form id="forgot-form">
       <div class="field"><label>Adresse e-mail</label><input type="email" id="forgot-email" required></div>
       <div id="forgot-result" style="font-size:14px;margin-bottom:12px;display:none"></div>
@@ -73,7 +73,9 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     });
     Auth.setToken(token); Auth.setUser(user);
     const next = new URLSearchParams(window.location.search).get('next');
-    window.location.href = user.role === 'admin' ? '/admin/admin-dashboard.html' : (next || '/dashboard.html');
+    // Anti « open redirect » : uniquement un chemin interne du site (/page), jamais //autre-site ni http(s)://...
+    const safeNext = next && /^\/(?![\/\\])[\w\-./?=&%#]*$/.test(next) ? next : null;
+    window.location.href = safeNext || '/dashboard.html';
   } catch (err) {
     errEl.textContent = err.message; errEl.style.display = 'block';
     btn.disabled = false; btn.textContent = 'Se connecter';

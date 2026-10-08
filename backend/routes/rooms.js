@@ -110,11 +110,18 @@ export async function handleRooms(req, res, urlPath, urlObj) {
     return json(res, 200, { available });
   }
 
+  // GET /api/rooms/:id/booked-dates — périodes déjà prises (dates uniquement, aucune info sur les clients)
+  const bookedMatch = urlPath.match(/^\/api\/rooms\/(\d+)\/booked-dates$/);
+  if (bookedMatch && req.method === 'GET') {
+    const rows = await db.prepare(`SELECT check_in, check_out FROM bookings WHERE room_id = ? AND status IN ('en_attente','confirmee') AND date(check_out) >= date('now')`).all(bookedMatch[1]);
+    return json(res, 200, { ranges: rows.map(r => ({ from: String(r.check_in).slice(0, 10), to: String(r.check_out).slice(0, 10) })) });
+  }
+
   // ---- Espace vendeur ----
 
   // GET /api/rooms/mine — un vendeur voit toutes ses annonces, quel que soit leur statut de validation
   if (urlPath === '/api/rooms/mine' && req.method === 'GET') {
-    const seller = requireApprovedSeller(req, res);
+    const seller = await requireApprovedSeller(req, res, false); // un vendeur « en attente » peut voir (sans modifier) ses annonces
     if (!seller) return;
     const rows = await db.prepare('SELECT * FROM rooms WHERE owner_id = ? ORDER BY created_at DESC').all(seller.id);
     return json(res, 200, { rooms: rows.map(parseRoom) });
@@ -123,7 +130,7 @@ export async function handleRooms(req, res, urlPath, urlObj) {
   // POST /api/rooms/mine — un vendeur propose une nouvelle annonce ; elle reste invisible au public
   // tant qu'un admin ne l'a pas validée (approval_status = 'en_attente').
   if (urlPath === '/api/rooms/mine' && req.method === 'POST') {
-    const seller = requireApprovedSeller(req, res);
+    const seller = await requireApprovedSeller(req, res);
     if (!seller) return;
     const sellerUser = await db.prepare('SELECT * FROM users WHERE id = ?').get(seller.id);
     if (sellerUser.role === 'vendeur' && sellerUser.vendeur_statut !== 'approuve') {
@@ -152,7 +159,7 @@ export async function handleRooms(req, res, urlPath, urlObj) {
   // PUT /api/rooms/mine/:id — le vendeur modifie sa propre annonce (repasse en attente de validation)
   const mineEditMatch = urlPath.match(/^\/api\/rooms\/mine\/(\d+)$/);
   if (mineEditMatch && req.method === 'PUT') {
-    const seller = requireApprovedSeller(req, res);
+    const seller = await requireApprovedSeller(req, res);
     if (!seller) return;
     const room = await db.prepare('SELECT * FROM rooms WHERE id = ?').get(mineEditMatch[1]);
     if (!room || room.owner_id !== seller.id) return notFound(res);
@@ -186,7 +193,7 @@ export async function handleRooms(req, res, urlPath, urlObj) {
 
   // DELETE /api/rooms/mine/:id — le vendeur retire sa propre annonce
   if (mineEditMatch && req.method === 'DELETE') {
-    const seller = requireApprovedSeller(req, res);
+    const seller = await requireApprovedSeller(req, res);
     if (!seller) return;
     const room = await db.prepare('SELECT * FROM rooms WHERE id = ?').get(mineEditMatch[1]);
     if (!room || room.owner_id !== seller.id) return notFound(res);
@@ -200,7 +207,7 @@ export async function handleRooms(req, res, urlPath, urlObj) {
 
   // GET /api/admin/rooms/pending — annonces en attente de validation
   if (urlPath === '/api/admin/rooms/pending' && req.method === 'GET') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const rows = await db.prepare(`
       SELECT rooms.*, users.name as owner_name, users.email as owner_email FROM rooms
@@ -212,7 +219,7 @@ export async function handleRooms(req, res, urlPath, urlObj) {
 
   const approveMatch = urlPath.match(/^\/api\/admin\/rooms\/(\d+)\/approve$/);
   if (approveMatch && req.method === 'PUT') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const room = await db.prepare('SELECT * FROM rooms WHERE id = ?').get(approveMatch[1]);
     if (!room) return notFound(res);
@@ -227,7 +234,7 @@ export async function handleRooms(req, res, urlPath, urlObj) {
 
   const rejectMatch = urlPath.match(/^\/api\/admin\/rooms\/(\d+)\/reject$/);
   if (rejectMatch && req.method === 'PUT') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const room = await db.prepare('SELECT * FROM rooms WHERE id = ?').get(rejectMatch[1]);
     if (!room) return notFound(res);
@@ -242,7 +249,7 @@ export async function handleRooms(req, res, urlPath, urlObj) {
 
   // ---- Admin CRUD ----
   if (urlPath === '/api/rooms' && req.method === 'POST') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const b = await parseBody(req);
     if (!b.title || !b.city || !b.price_per_night) return json(res, 400, { error: 'Titre, ville et prix requis.' });
@@ -266,7 +273,7 @@ export async function handleRooms(req, res, urlPath, urlObj) {
 
   const editMatch = urlPath.match(/^\/api\/rooms\/(\d+)$/);
   if (editMatch && req.method === 'PUT') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const room = await db.prepare('SELECT * FROM rooms WHERE id = ?').get(editMatch[1]);
     if (!room) return notFound(res);
@@ -300,7 +307,7 @@ export async function handleRooms(req, res, urlPath, urlObj) {
   }
 
   if (editMatch && req.method === 'DELETE') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const room = await db.prepare('SELECT * FROM rooms WHERE id = ?').get(editMatch[1]);
     if (!room) return notFound(res);
@@ -312,7 +319,7 @@ export async function handleRooms(req, res, urlPath, urlObj) {
 
   // GET /api/admin/rooms — liste complète (y compris indisponibles) pour l'admin
   if (urlPath === '/api/admin/rooms' && req.method === 'GET') {
-    const admin = requireAdmin(req, res);
+    const admin = await requireAdmin(req, res);
     if (!admin) return;
     const rows = await db.prepare('SELECT * FROM rooms ORDER BY created_at DESC').all();
     return json(res, 200, { rooms: rows.map(parseRoom) });
