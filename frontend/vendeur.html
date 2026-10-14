@@ -57,10 +57,13 @@
       <button class="btn btn-primary" id="new-listing-btn">+ Proposer une annonce</button>
     </div>
     <div class="dash-tiles">
-      <div class="dash-tile t1"><div class="num" id="vt-total">–</div><div class="lbl">annonces</div></div>
-      <div class="dash-tile t2"><div class="num" id="vt-pending">–</div><div class="lbl">en validation</div></div>
-      <div class="dash-tile t3"><div class="num" id="vt-live">–</div><div class="lbl">publiées</div></div>
+      <div class="dash-tile t1"><div class="num" id="vt-res">–</div><div class="lbl">réservations ce mois</div></div>
+      <div class="dash-tile t2"><div class="num" id="vt-rev" style="font-size:20px">–</div><div class="lbl">montant confirmé ce mois</div></div>
+      <div class="dash-tile t3"><div class="num" id="vt-rate">–</div><div class="lbl">note moyenne</div></div>
     </div>
+    <div style="font-size:12px;color:var(--muted-text);margin:-14px 0 18px"><span id="vt-total">–</span> annonces · <span id="vt-pending">–</span> en validation · <span id="vt-live">–</span> publiées</div>
+    <div class="avail-cal seller-cal" id="seller-cal" style="max-width:none;margin-bottom:24px"></div>
+    <div id="seller-day" class="seller-day"></div>
     <div id="listings-grid" class="grid" style="grid-template-columns:1fr;gap:14px">
       <div class="skeleton" style="height:100px"></div>
     </div>

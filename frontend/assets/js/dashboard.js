@@ -45,12 +45,31 @@ async function cancelBooking(id) {
 }
 
 function openReview(roomId, bookingId) {
-  const rating = prompt('Note sur 5 (1 à 5) :', '5');
-  if (!rating) return;
-  const comment = prompt('Votre commentaire :', '');
-  api('/reviews', { method: 'POST', body: { room_id: roomId, booking_id: bookingId, rating: Number(rating), comment } })
-    .then(() => showToast('Merci !', 'Votre avis a été publié.', 'success'))
-    .catch(err => showToast('Erreur', err.message, 'warn'));
+  const cats = [['rating_location', 'Emplacement'], ['rating_comm', 'Communication'], ['rating_value', 'Rapport qualité/prix']];
+  const vals = {};
+  const ov = document.createElement('div');
+  ov.className = 'review-overlay';
+  ov.innerHTML = `<div class="review-modal" role="dialog" aria-label="Donner mon avis">
+    <h3>Donner mon avis</h3>
+    ${cats.map(([k, l]) => `<div class="rv-pick" data-k="${k}"><span>${l}</span><div>${[1, 2, 3, 4, 5].map(n => `<button type="button" data-n="${n}" aria-label="${n} sur 5">★</button>`).join('')}</div></div>`).join('')}
+    <textarea id="rv-comment" maxlength="1000" placeholder="Votre commentaire (facultatif)"></textarea>
+    <div style="display:flex;gap:10px"><button type="button" class="btn btn-ghost" id="rv-cancel">Annuler</button><button type="button" class="btn btn-primary btn-block" id="rv-send">Publier</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click', (e) => {
+    if (e.target === ov || e.target.id === 'rv-cancel') return ov.remove();
+    const star = e.target.closest('.rv-pick button');
+    if (star) {
+      const pick = star.closest('.rv-pick'); vals[pick.dataset.k] = Number(star.dataset.n);
+      pick.querySelectorAll('button').forEach(b => b.classList.toggle('on', Number(b.dataset.n) <= vals[pick.dataset.k]));
+    }
+    if (e.target.id === 'rv-send') {
+      if (cats.some(([k]) => !vals[k])) return showToast('Notes manquantes', 'Donne une note à chaque critère.', 'warn');
+      api('/reviews', { method: 'POST', body: { booking_id: bookingId, ...vals, comment: ov.querySelector('#rv-comment').value } })
+        .then(() => { showToast('Merci !', 'Votre avis a été publié.', 'success'); ov.remove(); })
+        .catch(err => showToast('Erreur', err.message, 'warn'));
+    }
+  });
 }
 
 async function loadFavoris() {
@@ -206,7 +225,7 @@ async function refreshVerif() {
   } catch { /* non bloquant */ }
 }
 qs('vp-send').addEventListener('click', async () => {
-  try { await api('/auth/phone/send', { method: 'POST', body: { phone: qs('vp-phone').value } }); qs('vs-code').classList.remove('hidden'); showToast('SMS envoyé', 'Saisis le code reçu.'); }
+  try { await api('/auth/phone/send', { method: 'POST', body: { phone: qs('vp-phone').value } }); openCodeScreen(qs('vp-phone').value); }
   catch (err) { showToast('Erreur', err.message, 'warn'); }
 });
 qs('vp-verify').addEventListener('click', async () => {
@@ -243,3 +262,48 @@ qs('pm-notif').addEventListener('click', async () => {
   refreshNotifState();
 });
 refreshNotifState();
+
+
+// ---------- Écran « Vérifiez votre numéro » : 6 cases, renvoi après 30 s ----------
+function openCodeScreen(phone) {
+  const masked = String(phone).replace(/\s/g, '').replace(/^(\+?\d{3})\d*(\d{2})$/, '$1 XX XXX X$2');
+  const ov = document.createElement('div');
+  ov.className = 'code-screen';
+  ov.innerHTML = `<div class="code-box" role="dialog" aria-label="Vérification du numéro">
+    <button type="button" class="code-close" aria-label="Fermer">←</button>
+    <h2>Vérifiez votre numéro</h2>
+    <p>Nous avons envoyé un code à 6 chiffres au <strong>${escapeHtml(masked)}</strong></p>
+    <div class="code-cells">${'<input inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Chiffre">'.repeat(6)}</div>
+    <div class="code-err" id="code-err"></div>
+    <button type="button" class="btn btn-dark btn-block" id="code-go">Vérifier</button>
+    <button type="button" class="code-resend" id="code-resend" disabled></button>
+  </div>`;
+  document.body.appendChild(ov);
+  const cells = [...ov.querySelectorAll('.code-cells input')], err = ov.querySelector('#code-err');
+  const value = () => cells.map(c => c.value).join('');
+  cells[0].focus();
+  cells.forEach((c, i) => {
+    c.addEventListener('input', () => { c.value = c.value.replace(/\D/g, '').slice(-1); if (c.value && cells[i + 1]) cells[i + 1].focus(); if (value().length === 6) ov.querySelector('#code-go').click(); });
+    c.addEventListener('keydown', (e) => { if (e.key === 'Backspace' && !c.value && cells[i - 1]) cells[i - 1].focus(); });
+    c.addEventListener('paste', (e) => {
+      const digits = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6); if (!digits) return;
+      e.preventDefault(); digits.split('').forEach((d, k) => { if (cells[k]) cells[k].value = d; }); cells[Math.min(digits.length, 5)].focus();
+      if (digits.length === 6) ov.querySelector('#code-go').click();
+    });
+  });
+  let left = 30, timer;
+  const resend = ov.querySelector('#code-resend');
+  const tick = () => { resend.disabled = left > 0; resend.textContent = left > 0 ? `Renvoyer le code dans ${left}s` : 'Renvoyer le code'; if (left > 0) { left--; timer = setTimeout(tick, 1000); } };
+  tick();
+  const close = () => { clearTimeout(timer); ov.remove(); };
+  ov.querySelector('.code-close').addEventListener('click', close);
+  resend.addEventListener('click', async () => {
+    try { await api('/auth/phone/send', { method: 'POST', body: { phone } }); left = 30; err.textContent = ''; tick(); showToast('Nouveau code envoyé', ''); }
+    catch (e) { err.textContent = e.message; }
+  });
+  ov.querySelector('#code-go').addEventListener('click', async () => {
+    if (value().length < 6) { err.textContent = 'Saisis les 6 chiffres.'; return; }
+    try { await api('/auth/phone/verify', { method: 'POST', body: { code: value() } }); close(); showToast('Téléphone vérifié', '✅'); refreshVerif(); }
+    catch (e) { err.textContent = e.message; cells.forEach(c => { c.value = ''; }); cells[0].focus(); }
+  });
+}

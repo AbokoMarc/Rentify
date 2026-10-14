@@ -1,6 +1,6 @@
 // Envoi de SMS. Fournisseur choisi par variables d'environnement :
 //   SMS_PROVIDER=twilio  + TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM
-// Sans fournisseur : en développement le code est écrit dans la console du serveur ; en production l'envoi est refusé
+// Sans fournisseur : en développement (SMS_DEV_LOG=1) le code est écrit dans la console du serveur ; sinon l'envoi est refusé
 // (on ne prétend jamais avoir envoyé un SMS qui n'est pas parti).
 export function isSmsConfigured() {
   return process.env.SMS_PROVIDER === 'twilio' && !!process.env.TWILIO_ACCOUNT_SID && !!process.env.TWILIO_AUTH_TOKEN && !!process.env.TWILIO_FROM;
@@ -20,7 +20,7 @@ export async function sendSms(to, text) {
     if (!res.ok) throw new Error(`Twilio ${res.status}`);
     return { sent: true };
   }
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.SMS_DEV_LOG === '1' && process.env.NODE_ENV !== 'production') {
     console.log(`[SMS DEV] à ${to} : ${text}`);
     return { sent: true, dev: true };
   }

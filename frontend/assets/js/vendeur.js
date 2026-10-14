@@ -179,3 +179,57 @@ showLmStep(1);
 qs('listing-form').addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && lmStep < 4) { e.preventDefault(); qs('lm-next').click(); }
 });
+
+
+// ---------- Calendrier vendeur : séjours sur mes annonces ----------
+const sCal = { month: new Date(new Date().getFullYear(), new Date().getMonth(), 1), bookings: [], sel: null };
+const S_MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const sIso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const staysOn = (day) => sCal.bookings.filter(b => day >= b.check_in.slice(0, 10) && day < b.check_out.slice(0, 10));
+
+function renderSellerCal() {
+  const y = sCal.month.getFullYear(), m = sCal.month.getMonth();
+  const offset = (new Date(y, m, 1).getDay() + 6) % 7, daysIn = new Date(y, m + 1, 0).getDate(), today = sIso(new Date());
+  let cells = '<span></span>'.repeat(offset);
+  for (let d = 1; d <= daysIn; d++) {
+    const iso = sIso(new Date(y, m, d)), stays = staysOn(iso);
+    const cls = ['cal-day', stays.length ? 'has-stay' : '', iso === today ? 'today' : '', iso === sCal.sel ? 'sel' : ''].join(' ');
+    cells += `<button type="button" class="${cls}" data-date="${iso}">${d}</button>`;
+  }
+  qs('seller-cal').innerHTML = `
+    <div class="cal-head"><button type="button" id="sc-prev" aria-label="Mois précédent">←</button><strong>Calendrier — ${S_MONTHS[m]} ${y}</strong><button type="button" id="sc-next" aria-label="Mois suivant">→</button></div>
+    <div class="cal-grid cal-dow">${['LUN','MAR','MER','JEU','VEN','SAM','DIM'].map(x => `<span>${x}</span>`).join('')}</div>
+    <div class="cal-grid">${cells}</div>
+    <div class="cal-legend"><span><i class="lg sel"></i>Séjour sur l'une de mes annonces</span></div>`;
+  renderSellerDay();
+}
+function renderSellerDay() {
+  const box = qs('seller-day');
+  if (!sCal.sel) { box.innerHTML = ''; return; }
+  const stays = staysOn(sCal.sel);
+  box.innerHTML = stays.length ? stays.map(b => `
+    <div class="mod-row" style="margin-top:8px"><div class="mi"><strong>${escapeHtml(b.room_title)}</strong>
+      <small>${escapeHtml(b.guest_name)} · ${escapeHtml(b.check_in.slice(0, 10))} → ${escapeHtml(b.check_out.slice(0, 10))} · ${escapeHtml(b.code || '')}</small></div>
+      <span class="badge ${b.status === 'confirmee' ? 'badge-confirmee' : 'badge-attente'}">${b.status === 'confirmee' ? 'Confirmée' : b.status === 'terminee' ? 'Terminée' : 'En attente'}</span></div>`).join('')
+    : '<p style="color:var(--muted-text);font-size:13px;margin-top:8px">Aucun séjour ce jour-là.</p>';
+}
+qs('seller-cal').addEventListener('click', (e) => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.id === 'sc-prev') sCal.month = new Date(sCal.month.getFullYear(), sCal.month.getMonth() - 1, 1);
+  else if (t.id === 'sc-next') sCal.month = new Date(sCal.month.getFullYear(), sCal.month.getMonth() + 1, 1);
+  else if (t.dataset.date) sCal.sel = t.dataset.date;
+  renderSellerCal();
+});
+async function loadSellerStats() {
+  try {
+    const { bookings, avg_rating } = await api('/rooms/mine/bookings');
+    sCal.bookings = bookings;
+    const ym = sIso(new Date()).slice(0, 7);
+    const thisMonth = bookings.filter(b => b.check_in.slice(0, 7) === ym && b.status !== 'en_attente');
+    qs('vt-res').textContent = thisMonth.length;
+    qs('vt-rev').textContent = thisMonth.reduce((a, b) => a + (b.total_price || 0), 0).toLocaleString('fr-FR') + ' FCFA';
+    qs('vt-rate').textContent = avg_rating ? `${avg_rating} ★` : '–';
+  } catch { qs('vt-res').textContent = '0'; qs('vt-rev').textContent = '0 FCFA'; qs('vt-rate').textContent = '–'; }
+  renderSellerCal();
+}
+loadSellerStats();

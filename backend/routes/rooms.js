@@ -99,9 +99,12 @@ export async function handleRooms(req, res, urlPath, urlObj) {
       JOIN users ON users.id = reviews.user_id
       WHERE room_id = ? ORDER BY reviews.created_at DESC
     `).all(singleMatch[1]);
+    const bd = await db.prepare('SELECT AVG(rating_location) AS l, AVG(rating_comm) AS c, AVG(rating_value) AS v FROM reviews WHERE room_id = ?').get(room.id);
+    const r1 = (x) => (x == null ? null : Math.round(x * 10) / 10);
+    const breakdown = { location: r1(bd?.l), comm: r1(bd?.c), value: r1(bd?.v) };
     // Seul l'indicateur « hôte vérifié » est exposé (jamais le nom, l'email ou le document).
     const owner = room.owner_id ? await db.prepare('SELECT kyc_verified FROM users WHERE id = ?').get(room.owner_id) : null;
-    return json(res, 200, { room: { ...parseRoom(room), owner_kyc: !!owner?.kyc_verified, has_host: !!room.owner_id }, reviews });
+    return json(res, 200, { room: { ...parseRoom(room), owner_kyc: !!owner?.kyc_verified, has_host: !!room.owner_id, breakdown }, reviews });
   }
 
   // GET /api/rooms/:id/availability?check_in=&check_out=
@@ -127,6 +130,22 @@ export async function handleRooms(req, res, urlPath, urlObj) {
     if (!seller) return;
     const rows = await db.prepare('SELECT * FROM rooms WHERE owner_id = ? ORDER BY created_at DESC').all(seller.id);
     return json(res, 200, { rooms: rows.map(parseRoom) });
+  }
+
+  // GET /api/rooms/mine/bookings — séjours sur MES annonces (prénom du voyageur seulement : jamais email ni téléphone)
+  if (urlPath === '/api/rooms/mine/bookings' && req.method === 'GET') {
+    const seller = await requireApprovedSeller(req, res, false);
+    if (!seller) return;
+    const rows = await db.prepare(`
+      SELECT b.id, b.code, b.room_id, b.check_in, b.check_out, b.status, b.total_price, rooms.title AS room_title, u.name AS guest_name
+      FROM bookings b JOIN rooms ON rooms.id = b.room_id JOIN users u ON u.id = b.user_id
+      WHERE rooms.owner_id = ? AND b.status IN ('en_attente','confirmee','terminee')
+      ORDER BY b.check_in DESC LIMIT 300`).all(seller.id);
+    const avg = await db.prepare('SELECT AVG(rating) AS a FROM rooms WHERE owner_id = ? AND rating > 0').get(seller.id);
+    return json(res, 200, {
+      bookings: rows.map(r => ({ ...r, guest_name: String(r.guest_name || '').split(' ')[0] })),
+      avg_rating: avg?.a ? Math.round(avg.a * 10) / 10 : null,
+    });
   }
 
   // POST /api/rooms/mine — un vendeur propose une nouvelle annonce ; elle reste invisible au public

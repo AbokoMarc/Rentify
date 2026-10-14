@@ -294,6 +294,9 @@ CREATE INDEX IF NOT EXISTS idx_kyc_user ON kyc_requests(user_id, id);
 `);
 
 const MIGRATIONS = [
+  `ALTER TABLE reviews ADD COLUMN rating_location INTEGER`,
+  `ALTER TABLE reviews ADD COLUMN rating_comm INTEGER`,
+  `ALTER TABLE reviews ADD COLUMN rating_value INTEGER`,
   `ALTER TABLE users ADD COLUMN phone_verified INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE users ADD COLUMN kyc_verified INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE rooms ADD COLUMN pricing_period TEXT NOT NULL DEFAULT 'nuit'`,

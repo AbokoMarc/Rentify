@@ -692,3 +692,49 @@ html, body { overflow-x: clip; max-width: 100%; }
 .site-header .main-nav { flex: 1 1 0; overflow-x: auto; scrollbar-width: none; margin: 0 16px; }
 .site-header .main-nav::-webkit-scrollbar { display: none; }
 .site-header .header-actions { flex-shrink: 0; }
+
+.cal-day.has-stay { background: var(--forest); color: #fff; }
+.cal-day.today { outline: 2px solid var(--gold); }
+.seller-cal .cal-day.sel { background: var(--ink); color: #fff; }
+
+/* Avis détaillés */
+.rv-breakdown { background: var(--white); border-radius: 22px; box-shadow: var(--shadow-card); padding: 16px; margin-bottom: 14px; }
+.rv-breakdown:empty { display: none; }
+.rv-summary { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+.rv-big { font-size: 34px; font-weight: 800; } .rv-big small { font-size: 14px; color: var(--muted-text); font-weight: 600; }
+.rv-row { display: grid; grid-template-columns: 150px 1fr 34px; gap: 10px; align-items: center; font-size: 13px; padding: 4px 0; }
+.rv-bar { height: 7px; background: var(--sand-deep); border-radius: 4px; overflow: hidden; } .rv-bar i { display: block; height: 100%; background: var(--forest); }
+.review-overlay { position: fixed; inset: 0; background: rgba(17,23,34,.55); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.review-modal { background: #fff; border-radius: 24px; padding: 22px; width: 100%; max-width: 420px; display: grid; gap: 12px; }
+.rv-pick { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; }
+.rv-pick button { border: none; background: none; font-size: 26px; color: #D9CDBB; padding: 0 2px; } .rv-pick button.on { color: var(--gold); }
+.review-modal textarea { background: #F1ECE4; border: none; border-radius: 12px; padding: 12px; font: inherit; min-height: 80px; resize: vertical; }
+@media (max-width: 520px) { .rv-row { grid-template-columns: 110px 1fr 30px; } }
+
+/* Écran de vérification du numéro */
+.code-screen { position: fixed; inset: 0; z-index: 250; background: var(--sand); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.code-box { width: 100%; max-width: 380px; text-align: center; position: relative; padding-top: 40px; }
+.code-box h2 { font-size: 28px; margin-bottom: 8px; } .code-box p { color: var(--muted-text); margin-bottom: 26px; }
+.code-close { position: absolute; left: 0; top: 0; border: none; background: var(--white); width: 40px; height: 40px; border-radius: 50%; font-size: 18px; box-shadow: var(--shadow-card); }
+.code-cells { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 14px; }
+.code-cells input { aspect-ratio: 1 / 1.15; width: 100%; text-align: center; font-size: 24px; font-weight: 800; border: 2px solid var(--line-strong); border-radius: 14px; background: #fff; outline: none; }
+.code-cells input:focus { border-color: var(--gold); }
+.code-err { min-height: 20px; color: var(--clay); font-size: 13px; margin-bottom: 8px; }
+.code-resend { margin-top: 16px; border: none; background: none; color: var(--muted-text); font: inherit; font-size: 13px; } .code-resend:not(:disabled) { color: var(--gold-deep); font-weight: 700; }
+
+/* Accueil mobile : logements à la une en liste horizontale (photo à gauche) */
+@media (max-width: 560px) {
+  #featured-grid { grid-template-columns: 1fr !important; gap: 12px; }
+  #featured-grid .room-card { display: grid; grid-template-columns: 118px 1fr; align-items: stretch; }
+  #featured-grid .room-card .room-img-wrap { aspect-ratio: auto; height: 100%; min-height: 118px; margin: 8px; }
+  #featured-grid .room-card .room-img-wrap img { height: 100%; }
+  #featured-grid .room-card .verified-badge, #featured-grid .room-card .host-kyc, #featured-grid .room-card .fav-btn { display: none; }
+  #featured-grid .room-card .room-body { padding: 12px 12px 12px 4px; }
+  #featured-grid .room-card h3 { font-size: 15px; }
+}
+@media (max-width: 560px) {
+  #cities-grid { grid-template-columns: 1fr !important; gap: 10px; }
+  #cities-grid .city-card { display: grid; grid-template-columns: 96px 1fr; align-items: center; }
+  #cities-grid .city-card .city-img { height: 84px; margin: 8px; border-radius: 14px; }
+  #cities-grid .city-card .city-body { padding: 8px 12px 8px 0; }
+}

@@ -77,6 +77,11 @@ async function loadRoom() {
       setTimeout(() => map.invalidateSize(), 100);
     }
 
+    const bd = room.breakdown || {};
+    const rows = [['Emplacement', bd.location], ['Communication', bd.comm], ['Rapport qualité/prix', bd.value]].filter(x => x[1] != null);
+    qs('r-breakdown').innerHTML = room.reviews_count > 0 ? `
+      <div class="rv-summary"><div class="rv-big">${Number(room.rating).toFixed(1).replace('.', ',')}<small>/5</small></div><div style="color:var(--muted-text);font-size:13px">${room.reviews_count} avis</div></div>
+      ${rows.map(([l, v]) => `<div class="rv-row"><span>${l}</span><div class="rv-bar"><i style="width:${(v / 5) * 100}%"></i></div><b>${String(v).replace('.', ',')}</b></div>`).join('')}` : '';
     qs('r-reviews').innerHTML = reviews.length
       ? reviews.map(r => `<div class="review-item">
           <div style="display:flex;justify-content:space-between"><strong>${escapeHtml(r.user_name)}</strong><span style="color:var(--gold-deep)">${starsHtml(r.rating)}</span></div>
