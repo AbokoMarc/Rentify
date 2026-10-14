@@ -33,7 +33,7 @@ async function loadMessages(reset) {
     const data = await api(`/conversations/${currentConv}/messages?after=${reset ? 0 : lastId}`);
     me = data.me;
     if (reset) {
-      qs('chat-name').textContent = data.other_name;
+      qs('chat-name').textContent = data.other_name + (data.other_kyc ? ' 🛡️' : '');
       qs('chat-avatar').textContent = (data.other_name || '?').trim().slice(0, 1).toUpperCase();
       qs('chat-room').textContent = data.room?.title || '';
       qs('chat-msgs').innerHTML = '';

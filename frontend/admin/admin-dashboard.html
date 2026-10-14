@@ -1,7 +1,18 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<style>html{visibility:hidden}</style>
+<style>html{visibility:hidden}  .stat-grid .stat-card:nth-child(1) { background: #CDE8E3; } .stat-grid .stat-card:nth-child(2) { background: #FBE3B5; }
+  .stat-grid .stat-card:nth-child(3) { background: #FAD3B0; } .stat-grid .stat-card:nth-child(4) { background: #E3DDF3; }
+  .stat-card .stat-value { font-family: var(--font-body); font-weight: 800; }
+  .mod-count { background: var(--gold); color: #fff; border-radius: 999px; font-size: 12px; padding: 2px 9px; vertical-align: middle; }
+  .mod-list { display: grid; gap: 10px; }
+  .mod-row { background: #fff; border-radius: 18px; box-shadow: var(--shadow-card); padding: 12px 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .mod-row img { width: 64px; height: 52px; object-fit: cover; border-radius: 12px; background: var(--sand-deep); }
+  .mod-row .mi { flex: 1; min-width: 160px; } .mod-row .mi small { color: var(--muted-text); display: block; }
+  .mod-row .ma { display: flex; gap: 8px; }
+  .btn-ok { background: var(--forest); color: #fff; } .btn-ko { background: #FBE4DE; color: var(--clay); }
+  @media (max-width: 760px) { .dash-grid-2 { grid-template-columns: 1fr !important; } }
+</style>
 <meta charset="UTF-8">
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -36,7 +47,10 @@
     <div class="skeleton" style="height:100px"></div><div class="skeleton" style="height:100px"></div>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px">
+  <h2 style="font-size:20px;margin:6px 0 12px">Annonces à modérer <span id="mod-count" class="mod-count"></span></h2>
+  <div id="mod-list" class="mod-list"><div class="skeleton" style="height:70px"></div></div>
+
+  <div class="dash-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:28px">
     <div class="panel">
       <h3>Revenu par méthode de paiement</h3>
       <div id="revenue-by-method"></div>
@@ -74,6 +88,31 @@ async function load() {
       : `<p style="color:var(--muted-text);font-size:14px">Pas encore de données.</p>`;
   } catch (err) { showToast('Erreur', err.message, 'warn'); }
 }
+async function loadModeration() {
+  try {
+    const { rooms } = await api('/admin/rooms/pending');
+    qs('mod-count').textContent = rooms.length; qs('mod-count').style.display = rooms.length ? '' : 'none';
+    qs('mod-list').innerHTML = rooms.length ? rooms.map(r => `
+      <div class="mod-row" data-id="${r.id}">
+        <img src="${escapeHtml((r.images && r.images[0]) || '')}" alt="" onerror="this.style.visibility='hidden'">
+        <div class="mi"><strong>${escapeHtml(r.title)}</strong><small>${escapeHtml(r.city)} · ${escapeHtml(r.type)} · ${money(r.price_per_night)} · par ${escapeHtml(r.owner_name || 'équipe')}</small></div>
+        <div class="ma"><button class="btn btn-ok btn-sm" data-act="approve">Approuver</button><button class="btn btn-ko btn-sm" data-act="reject">Rejeter</button></div>
+      </div>`).join('') : '<p style="color:var(--muted-text);font-size:14px">✅ Aucune annonce en attente.</p>';
+  } catch (err) { qs('mod-list').innerHTML = `<p style="color:var(--clay)">${escapeHtml(err.message)}</p>`; }
+}
+qs('mod-list').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button[data-act]'); if (!btn) return;
+  const id = btn.closest('.mod-row').dataset.id;
+  try {
+    if (btn.dataset.act === 'approve') await api(`/admin/rooms/${id}/approve`, { method: 'PUT' });
+    else {
+      const reason = prompt('Motif du rejet (envoyé au vendeur) :'); if (reason === null) return;
+      await api(`/admin/rooms/${id}/reject`, { method: 'PUT', body: { reason } });
+    }
+    showToast('Fait', btn.dataset.act === 'approve' ? 'Annonce approuvée.' : 'Annonce rejetée.'); loadModeration();
+  } catch (err) { showToast('Erreur', err.message, 'warn'); }
+});
+loadModeration();
 // money() est déjà défini globalement dans api.js (bi-devise FCFA + Euro) — pas de doublon ici.
 load();
 </script>

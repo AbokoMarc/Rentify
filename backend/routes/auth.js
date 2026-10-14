@@ -10,7 +10,7 @@ function publicUser(u) {
     id: u.id, name: u.name, email: u.email, phone: u.phone, role: u.role, avatar: u.avatar,
     country: u.country, loyalty_points: u.loyalty_points, must_change_password: !!u.must_change_password,
     preferred_language: u.preferred_language, default_travel_purpose: u.default_travel_purpose,
-    vendeur_statut: u.vendeur_statut, email_verified: !!u.email_verified,
+    vendeur_statut: u.vendeur_statut, email_verified: !!u.email_verified, phone_verified: !!u.phone_verified, kyc_verified: !!u.kyc_verified,
   };
 }
 
@@ -200,6 +200,10 @@ export async function handleAuth(req, res, urlPath) {
     if (avatar && (typeof avatar !== 'string' || avatar.length > 400000 || !/^(data:image\/(png|jpe?g|webp|gif);base64,|https:\/\/)/i.test(avatar))) {
       return json(res, 400, { error: 'Photo de profil invalide.' });
     }
+    if (phone && (typeof phone !== 'string' || !/^\+?[\d\s.-]{8,20}$/.test(phone))) return json(res, 400, { error: 'Numéro de téléphone invalide.' });
+    const prev = await db.prepare('SELECT phone FROM users WHERE id = ?').get(authUser.id);
+    // Un numéro modifié n'est plus « vérifié » : il faut refaire la vérification par SMS.
+    if (phone && phone !== prev?.phone) await db.prepare('UPDATE users SET phone_verified = 0 WHERE id = ?').run(authUser.id);
     await db.prepare('UPDATE users SET name = COALESCE(?, name), phone = COALESCE(?, phone), avatar = COALESCE(?, avatar) WHERE id = ?')
       .run(name || null, phone || null, avatar || null, authUser.id);
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(authUser.id);

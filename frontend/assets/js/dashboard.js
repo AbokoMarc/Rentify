@@ -178,7 +178,68 @@ qs('resend-verify-btn').addEventListener('click', async () => {
     const { user } = await api('/auth/me');
     qs('dash-hello-title').textContent = `Bonjour, ${(user.name || '').split(' ')[0]}`; // textContent : pas d'injection HTML
     qs('tile-points').textContent = user.loyalty_points ?? 0;
+    qs('pf-name').textContent = user.name; qs('pf-email').textContent = user.email;
+    qs('pf-avatar').textContent = (user.name || '?').trim().slice(0, 1).toUpperCase();
+    const pb = qs('pf-badge');
+    if (user.kyc_verified) { pb.className = 'kyc-badge'; pb.textContent = '🛡️ KYC vérifié'; }
+    else if (user.phone_verified || user.email_verified) { pb.textContent = 'Vérification en cours de ton profil'; }
     const badge = qs('dash-badge');
-    if (user.email_verified) { badge.className = 'kyc-badge'; badge.textContent = '✓ Email vérifié'; }
+    if (user.kyc_verified) { badge.className = 'kyc-badge'; badge.textContent = '🛡️ KYC vérifié'; }
+    else if (user.email_verified) { badge.className = 'kyc-badge off'; badge.textContent = '✓ Email vérifié · identité à vérifier'; }
   } catch { /* la redirection de session gère les erreurs d'authentification */ }
 })();
+
+
+// ---------- Vérification du compte : téléphone (SMS) + CNI ----------
+async function refreshVerif() {
+  try {
+    const k = await api('/kyc/me');
+    qs('verif-card').classList.toggle('hidden', k.kyc_verified && k.phone_verified);
+    qs('vs-phone-act').classList.toggle('hidden', k.phone_verified);
+    qs('vs-phone-sub').textContent = k.phone_verified ? `✓ ${k.phone} vérifié` : 'Confirme ton numéro par SMS.';
+    const r = k.request;
+    qs('vs-kyc-act').classList.toggle('hidden', k.kyc_verified || (r && r.status === 'en_attente'));
+    qs('vs-kyc-sub').textContent = k.kyc_verified ? '✓ Identité vérifiée'
+      : r?.status === 'en_attente' ? '⏳ Document en cours d\'examen (24 à 48 h).'
+      : r?.status === 'rejete' ? `Refusé : ${r.reject_reason || 'document illisible'}. Tu peux renvoyer un document.`
+      : 'JPG, PNG ou PDF — 2 Mo maximum. Visible uniquement par l\'équipe de vérification.';
+  } catch { /* non bloquant */ }
+}
+qs('vp-send').addEventListener('click', async () => {
+  try { await api('/auth/phone/send', { method: 'POST', body: { phone: qs('vp-phone').value } }); qs('vs-code').classList.remove('hidden'); showToast('SMS envoyé', 'Saisis le code reçu.'); }
+  catch (err) { showToast('Erreur', err.message, 'warn'); }
+});
+qs('vp-verify').addEventListener('click', async () => {
+  try { await api('/auth/phone/verify', { method: 'POST', body: { code: qs('vp-code').value } }); qs('vs-code').classList.add('hidden'); showToast('Téléphone vérifié', '✅'); refreshVerif(); }
+  catch (err) { showToast('Erreur', err.message, 'warn'); }
+});
+qs('vk-send').addEventListener('click', () => {
+  const f = qs('vk-file').files[0];
+  if (!f) return showToast('Choisis un fichier', 'JPG, PNG ou PDF.', 'warn');
+  if (f.size > 2 * 1024 * 1024) return showToast('Fichier trop lourd', '2 Mo maximum.', 'warn');
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try { await api('/kyc', { method: 'POST', body: { document: reader.result } }); showToast('Document envoyé', 'Nous l\'examinons sous 48 h.'); refreshVerif(); }
+    catch (err) { showToast('Erreur', err.message, 'warn'); }
+  };
+  reader.readAsDataURL(f);
+});
+refreshVerif();
+
+
+// ---------- Menu du profil ----------
+qs('pm-security').addEventListener('click', () => qs('pf-security').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+qs('pm-logout').addEventListener('click', () => Auth.logout());
+function refreshNotifState() {
+  const st = qs('pm-notif-state');
+  if (!('Notification' in window)) { st.textContent = 'Non pris en charge'; return; }
+  st.textContent = Notification.permission === 'granted' ? 'Activées' : Notification.permission === 'denied' ? 'Bloquées' : 'Désactivées';
+}
+qs('pm-notif').addEventListener('click', async () => {
+  if (!('Notification' in window)) return showToast('Indisponible', "Ce navigateur ne gère pas les notifications.", 'warn');
+  if (Notification.permission === 'denied') return showToast('Notifications bloquées', "Autorise-les dans les réglages de ton navigateur pour ce site.", 'warn');
+  if (Notification.permission !== 'granted') await Notification.requestPermission();
+  if (Notification.permission === 'granted') { await bootstrapPushNotifications(); showToast('Notifications activées', '🔔'); }
+  refreshNotifState();
+});
+refreshNotifState();

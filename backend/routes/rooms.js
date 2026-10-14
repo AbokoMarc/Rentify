@@ -38,7 +38,7 @@ export async function handleRooms(req, res, urlPath, urlObj) {
     const pricingPeriod = q.get('pricing_period'); // nuit | mois
     const furnished = q.get('furnished'); // '1' | '0'
 
-    let sql = `SELECT * FROM rooms WHERE status = 'disponible' AND approval_status = 'approuve'`;
+    let sql = `SELECT rooms.*, COALESCE((SELECT kyc_verified FROM users WHERE users.id = rooms.owner_id), 0) AS owner_kyc FROM rooms WHERE status = 'disponible' AND approval_status = 'approuve'`;
     const params = [];
     if (country) { sql += ` AND country = ?`; params.push(country); }
     if (type) { sql += ` AND type = ?`; params.push(type); }
@@ -99,7 +99,9 @@ export async function handleRooms(req, res, urlPath, urlObj) {
       JOIN users ON users.id = reviews.user_id
       WHERE room_id = ? ORDER BY reviews.created_at DESC
     `).all(singleMatch[1]);
-    return json(res, 200, { room: parseRoom(room), reviews });
+    // Seul l'indicateur « hôte vérifié » est exposé (jamais le nom, l'email ou le document).
+    const owner = room.owner_id ? await db.prepare('SELECT kyc_verified FROM users WHERE id = ?').get(room.owner_id) : null;
+    return json(res, 200, { room: { ...parseRoom(room), owner_kyc: !!owner?.kyc_verified, has_host: !!room.owner_id }, reviews });
   }
 
   // GET /api/rooms/:id/availability?check_in=&check_out=

@@ -18,7 +18,7 @@ function roomCardHtml(room) {
   <a href="/room.html?id=${room.id}" class="room-card">
     <div class="room-img-wrap">
       <img src="${img}" alt="${escapeHtml(room.title)} à ${escapeHtml(room.city)}" loading="lazy">
-      <span class="verified-badge" title="Annonce vérifiée par l'équipe Lokaya avant publication">✓ Vérifié</span>
+      <span class="verified-badge" title="Annonce vérifiée par l'équipe Lokaya avant publication">✓ Vérifié</span>${room.owner_kyc ? '<span class="host-kyc" title="Hôte dont l\'identité a été vérifiée">🛡️ Hôte vérifié</span>' : ''}
       <span class="room-type-tag">${room.type}</span>
       <button class="fav-btn" data-room="${room.id}" aria-label="Ajouter aux favoris" onclick="event.preventDefault(); toggleFav(${room.id}, this)">♥</button>
     </div>

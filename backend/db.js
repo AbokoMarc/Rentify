@@ -280,7 +280,22 @@ CREATE TABLE IF NOT EXISTS chat_messages (
 CREATE INDEX IF NOT EXISTS idx_chat_conv ON chat_messages(conversation_id, id);
 `);
 
+await db.exec(`
+CREATE TABLE IF NOT EXISTS phone_verifications (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id),
+  phone TEXT NOT NULL, code_hash TEXT NOT NULL, expires_at INTEGER NOT NULL, attempts INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')));
+CREATE TABLE IF NOT EXISTS kyc_requests (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL REFERENCES users(id),
+  doc_mime TEXT NOT NULL, doc_data TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'en_attente', reject_reason TEXT, reviewed_by INTEGER, reviewed_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')));
+CREATE INDEX IF NOT EXISTS idx_kyc_user ON kyc_requests(user_id, id);
+`);
+
 const MIGRATIONS = [
+  `ALTER TABLE users ADD COLUMN phone_verified INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE users ADD COLUMN kyc_verified INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE rooms ADD COLUMN pricing_period TEXT NOT NULL DEFAULT 'nuit'`,
   `ALTER TABLE rooms ADD COLUMN furnished INTEGER`,
   `ALTER TABLE rooms ADD COLUMN rental_terms TEXT`,

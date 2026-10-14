@@ -4,8 +4,12 @@ import { json, parseBody, notFound } from '../lib/http.js';
 import { requireAuth, requireAdmin } from '../lib/auth.js';
 import { notifyAdmins, notifyClient } from '../lib/notify.js';
 
+// Code de réservation lisible : LOK-XXXXX (alphabet sans caractères ambigus : ni 0/O, ni 1/I).
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function genCode() {
-  return 'RM-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+  let c = '';
+  for (let i = 0; i < 5; i++) c += CODE_ALPHABET[crypto.randomInt(CODE_ALPHABET.length)];
+  return 'LOK-' + c;
 }
 
 function nightsBetween(checkIn, checkOut) {
@@ -15,7 +19,7 @@ function nightsBetween(checkIn, checkOut) {
 
 async function withRoom(booking) {
   const room = await db.prepare(`
-    SELECT rooms.id, rooms.title, rooms.city, rooms.country, rooms.address, rooms.images, rooms.pricing_period, users.name as owner_name
+    SELECT rooms.id, rooms.owner_id, rooms.title, rooms.city, rooms.country, rooms.address, rooms.images, rooms.pricing_period, users.name as owner_name
     FROM rooms LEFT JOIN users ON users.id = rooms.owner_id WHERE rooms.id = ?
   `).get(booking.room_id);
   const payment = await db.prepare('SELECT * FROM payments WHERE booking_id = ? ORDER BY id DESC LIMIT 1').get(booking.id);

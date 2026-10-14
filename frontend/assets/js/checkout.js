@@ -4,6 +4,17 @@ const bookingId = new URLSearchParams(window.location.search).get('booking');
 let currentBooking = null;
 let mobileMoneyAvailable = true;
 let selectedMethod = 'mobile_money';
+let selectedOperator = null; // 'orange' | 'mtn' — sert à contrôler que le numéro saisi correspond bien à l'opérateur choisi
+
+// Préfixes Mobile Money du Cameroun : MTN 650-654, 67x, 68x ; Orange 655-659, 69x (et 640 pour certains numéros).
+function detectOperator(raw) {
+  const n = String(raw).replace(/\D/g, '').replace(/^237/, '');
+  if (!/^6\d{8}$/.test(n)) return null;
+  if (/^(65[0-4]|67\d|68\d)/.test(n)) return 'mtn';
+  if (/^(65[5-9]|69\d)/.test(n)) return 'orange';
+  return null;
+}
+const OP_LABEL = { orange: 'Orange Money', mtn: 'MTN MoMo' };
 let statusPoll = null;
 
 async function loadMethodsAvailability() {
@@ -57,7 +68,7 @@ function renderSummary(booking) {
       <div style="font-size:36px">${booking.status === 'confirmee' ? '✅' : 'ℹ️'}</div>
       <h3 style="margin-top:10px">Réservation ${booking.status.replace('_', ' ')}</h3>
       <p style="color:var(--muted-text);font-size:14px;margin-top:6px">Code : ${booking.code}</p>
-      <a href="/dashboard.html" class="btn btn-dark btn-block" style="margin-top:16px">Voir mes réservations</a>
+      <a href="${booking.status === 'confirmee' ? '/confirmation.html?booking=' + booking.id : '/dashboard.html'}" class="btn btn-dark btn-block" style="margin-top:16px">${booking.status === 'confirmee' ? 'Voir la confirmation' : 'Voir mes réservations'}</a>
     </div>`;
     qs('pay-submit').classList.add('hidden');
     return;
@@ -111,7 +122,7 @@ function showMobileMoneyWaiting(reference, operator) {
       if (status === 'valide') {
         clearInterval(statusPoll);
         showToast('Paiement confirmé 🎉', 'Ta réservation est validée.', 'success');
-        setTimeout(() => { window.location.href = '/dashboard.html'; }, 1500);
+        setTimeout(() => { window.location.href = `/confirmation.html?booking=${bookingId}`; }, 1200);
       } else if (status === 'echoue') {
         clearInterval(statusPoll);
         showToast('Paiement échoué', 'Le paiement Mobile Money a échoué ou a été annulé.', 'warn');
@@ -131,6 +142,9 @@ qs('pay-submit').addEventListener('click', async () => {
   if (selectedMethod === 'mobile_money') {
     const phone = qs('mm-phone').value.trim();
     if (!phone) { errEl.textContent = 'Merci de renseigner ton numéro Mobile Money.'; errEl.style.display = 'block'; return; }
+    const detected = detectOperator(phone);
+    if (!selectedOperator) { errEl.textContent = 'Choisis ton opérateur : Orange Money ou MTN MoMo.'; errEl.style.display = 'block'; return; }
+    if (detected && detected !== selectedOperator) { errEl.textContent = `Ce numéro semble être un numéro ${OP_LABEL[detected]}. Choisis ${OP_LABEL[detected]} ou vérifie ton numéro.`; errEl.style.display = 'block'; return; }
     const btn = qs('pay-submit');
     btn.disabled = true; const originalText = btn.textContent; btn.textContent = 'Envoi de la demande…';
     try {
@@ -152,3 +166,18 @@ mountLayout();
 loadSummary();
 loadMethodsAvailability();
 loadCryptoWallet();
+
+// Choix de l'opérateur (gros boutons) + indication en direct selon le numéro saisi
+document.querySelectorAll('.op-btn').forEach(btn => btn.addEventListener('click', () => {
+  selectedOperator = btn.dataset.op;
+  document.querySelectorAll('.op-btn').forEach(b => b.classList.toggle('active', b === btn));
+  qs('mm-phone').focus();
+}));
+qs('mm-phone').addEventListener('input', () => {
+  const d = detectOperator(qs('mm-phone').value), hint = qs('mm-op-hint');
+  hint.classList.toggle('hidden', !d);
+  if (d) {
+    hint.textContent = `Numéro ${OP_LABEL[d]} détecté`;
+    if (!selectedOperator) document.querySelector(`.op-btn[data-op="${d}"]`).click();
+  }
+});

@@ -24,33 +24,48 @@
 <body>
 <div id="app-header"></div>
 
-<section class="hero" style="padding:56px 0 90px">
-  <div class="container">
-    <span class="eyebrow" style="color:var(--gold)">Assistance</span>
-    <h1 style="color:white;font-size:36px">Centre d'aide</h1>
-    <p class="lead" style="margin-bottom:0">Les réponses aux questions les plus fréquentes. Pas trouvé la tienne ? Écris-nous sur WhatsApp.</p>
+<section class="hero" style="padding:44px 0 70px">
+  <div class="container" style="max-width:760px">
+    <span class="eyebrow">Assistance</span>
+    <h1 style="font-size:36px">Centre d'aide</h1>
+    <div class="help-search"><span>🔍</span><input type="search" id="help-q" placeholder="Comment pouvons-nous vous aider ?" autocomplete="off"></div>
   </div>
 </section>
 
-<div class="container" style="max-width:760px;padding:50px 24px 80px">
+<div class="container" style="max-width:760px;padding:0 24px 80px;margin-top:-40px;position:relative">
+  <div class="help-cats" id="help-cats">
+    <button class="help-cat active" data-cat="all"><i>📚</i>Tout</button>
+    <button class="help-cat" data-cat="res"><i>🏠</i>Réservation</button>
+    <button class="help-cat" data-cat="pay"><i>💳</i>Paiement</button>
+    <button class="help-cat" data-cat="sell"><i>🏷️</i>Vendeur</button>
+    <button class="help-cat" data-cat="acc"><i>🛡️</i>Compte</button>
+  </div>
+  <div id="help-empty" class="empty-state hidden"><i>🔎</i>Aucune réponse trouvée. Écris-nous sur WhatsApp ci-dessous.</div>
 
-  <h2 style="font-size:18px;margin-bottom:6px">Réserver un logement</h2>
-  <details class="faq-item"><summary>Comment réserver une chambre ou un appartement ?</summary><p>Recherche par ville ou budget, ouvre l'annonce qui t'intéresse, choisis tes dates et clique sur "Réserver". Tu paies ensuite en Mobile Money pour confirmer.</p></details>
-  <details class="faq-item"><summary>Le numéro du propriétaire est-il visible avant la réservation ?</summary><p>Non, jamais. Le contact se fait uniquement via WhatsApp avec l'équipe Lokaya ou via la messagerie de l'app, pour la sécurité de tous.</p></details>
-  <details class="faq-item"><summary>Puis-je annuler une réservation ?</summary><p>Oui, depuis "Mes réservations" dans ton espace. Les conditions d'annulation (remboursement partiel ou total) dépendent du délai avant la date d'arrivée — elles sont rappelées avant la confirmation de ta réservation.</p></details>
 
-  <h2 style="font-size:18px;margin:32px 0 6px">Paiement</h2>
-  <details class="faq-item"><summary>Quels moyens de paiement sont acceptés ?</summary><p>MTN Mobile Money et Orange Money (paiement automatique et immédiat), ainsi qu'un règlement en cryptomonnaie en option secondaire.</p></details>
-  <details class="faq-item"><summary>Mon paiement Mobile Money n'a pas confirmé, que faire ?</summary><p>Vérifie que tu as bien validé le push reçu sur ton téléphone avec ton code secret. Si le problème persiste au-delà de quelques minutes, contacte-nous sur WhatsApp avec ton numéro de réservation.</p></details>
+  <h2 style="font-size:18px;margin-bottom:6px" data-cat-title="res">Réserver un logement</h2>
+  <details class="faq-item" data-cat="res"><summary>Comment réserver une chambre ou un appartement ?</summary><p>Recherche par ville ou budget, ouvre l'annonce qui t'intéresse, choisis tes dates et clique sur "Réserver". Tu paies ensuite en Mobile Money pour confirmer.</p></details>
+  <details class="faq-item" data-cat="res"><summary>Comment contacter l'hôte ?</summary><p>Depuis la fiche du logement, clique sur « Contacter l'hôte » : tu écris directement dans la messagerie Lokaya. Le numéro de téléphone du propriétaire n'est jamais affiché, et tous les échanges restent dans l'application.</p></details>
+  <details class="faq-item" data-cat="res"><summary>Puis-je annuler une réservation ?</summary><p>Oui, depuis "Mes réservations" dans ton espace. Les conditions d'annulation (remboursement partiel ou total) dépendent du délai avant la date d'arrivée — elles sont rappelées avant la confirmation de ta réservation.</p></details>
 
-  <h2 style="font-size:18px;margin:32px 0 6px">Proposer une annonce (vendeurs)</h2>
-  <details class="faq-item"><summary>Comment devenir vendeur sur Lokaya ?</summary><p>Crée un compte, puis va dans "Devenir vendeur" — ta demande est examinée par notre équipe avant validation.</p></details>
-  <details class="faq-item"><summary>Pourquoi mon annonce n'apparaît-elle pas sur le site ?</summary><p>Chaque annonce est vérifiée manuellement avant publication, pour la confiance des clients. Ce délai est généralement court — tu es notifié dès qu'elle est validée ou si elle est refusée (avec le motif).</p></details>
+  <h2 style="font-size:18px;margin:32px 0 6px" data-cat-title="pay">Paiement</h2>
+  <details class="faq-item" data-cat="pay"><summary>Quels moyens de paiement sont acceptés ?</summary><p>MTN Mobile Money et Orange Money (paiement automatique et immédiat), ainsi qu'un règlement en cryptomonnaie en option secondaire.</p></details>
+  <details class="faq-item" data-cat="pay"><summary>Mon paiement Mobile Money n'a pas confirmé, que faire ?</summary><p>Vérifie que tu as bien validé le push reçu sur ton téléphone avec ton code secret. Si le problème persiste au-delà de quelques minutes, contacte-nous sur WhatsApp avec ton numéro de réservation.</p></details>
+
+  <h2 style="font-size:18px;margin:32px 0 6px" data-cat-title="sell">Proposer une annonce (vendeurs)</h2>
+  <details class="faq-item" data-cat="sell"><summary>Comment devenir vendeur sur Lokaya ?</summary><p>Crée un compte, puis va dans "Devenir vendeur" — ta demande est examinée par notre équipe avant validation.</p></details>
+  <details class="faq-item" data-cat="sell"><summary>Pourquoi mon annonce n'apparaît-elle pas sur le site ?</summary><p>Chaque annonce est vérifiée manuellement avant publication, pour la confiance des clients. Ce délai est généralement court — tu es notifié dès qu'elle est validée ou si elle est refusée (avec le motif).</p></details>
+
+  <h2 style="font-size:18px;margin:32px 0 6px" data-cat-title="acc">Compte et sécurité</h2>
+  <details class="faq-item" data-cat="acc"><summary>À quoi sert le badge « KYC vérifié » ?</summary><p>Il indique que le téléphone et la pièce d'identité du titulaire ont été vérifiés par notre équipe. Dans ton tableau de bord, la carte « Vérification du compte » te guide : code reçu par SMS, puis envoi de ta CNI.</p></details>
+  <details class="faq-item" data-cat="acc"><summary>Mes documents d'identité sont-ils protégés ?</summary><p>Oui. Ta CNI n'est visible que par l'équipe de vérification, chaque consultation est enregistrée, et l'image est supprimée dès que la vérification est approuvée.</p></details>
+  <details class="faq-item" data-cat="acc"><summary>J'ai oublié mon mot de passe.</summary><p>Sur la page de connexion, clique sur « Mot de passe oublié » : tu reçois un lien valable 30 minutes pour en choisir un nouveau. Ton ancien mot de passe reste valable tant que tu n'as pas utilisé le lien.</p></details>
+  <details class="faq-item" data-cat="res"><summary>Où trouver mon code de réservation ?</summary><p>Une fois le paiement confirmé, ton code (du type LOK-XXXXX) s'affiche sur l'écran de confirmation et dans « Mes réservations ».</p></details>
 
   <div style="margin-top:40px;padding:24px;background:var(--sand-deep);border-radius:var(--radius-md);text-align:center">
     <h3 style="font-size:16px;margin-bottom:8px">Une autre question ?</h3>
     <p style="color:var(--muted-text);font-size:14px;margin-bottom:14px">Notre équipe te répond directement sur WhatsApp.</p>
-    <a href="#" id="aide-whatsapp-link" class="btn btn-dark btn-sm">Discuter sur WhatsApp</a>
+    <a href="#" id="aide-whatsapp-link" class="btn btn-sm" style="background:#25D366;color:#fff">💬 Contacter le support WhatsApp</a>
   </div>
 </div>
 
@@ -65,6 +80,26 @@
 <script src="/assets/js/notifications.js"></script>
 <script>
 mountLayout();
+const norm = (t) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+let helpCat = 'all';
+function filterHelp() {
+  const q = norm(document.getElementById('help-q').value.trim());
+  let shown = 0;
+  document.querySelectorAll('.faq-item').forEach(el => {
+    const ok = (helpCat === 'all' || el.dataset.cat === helpCat) && (!q || norm(el.textContent).includes(q));
+    el.style.display = ok ? '' : 'none'; if (ok) shown++;
+  });
+  document.querySelectorAll('[data-cat-title]').forEach(h => {
+    const any = [...document.querySelectorAll(`.faq-item[data-cat="${h.dataset.catTitle}"]`)].some(e => e.style.display !== 'none');
+    h.style.display = any ? '' : 'none';
+  });
+  document.getElementById('help-empty').classList.toggle('hidden', shown > 0);
+}
+document.getElementById('help-q').addEventListener('input', filterHelp);
+document.getElementById('help-cats').addEventListener('click', (e) => {
+  const b = e.target.closest('.help-cat'); if (!b) return;
+  helpCat = b.dataset.cat; document.querySelectorAll('.help-cat').forEach(x => x.classList.toggle('active', x === b)); filterHelp();
+});
 document.getElementById('aide-whatsapp-link').href = whatsappUrl("Bonjour, j'ai une question sur Lokaya.");
 </script>
 </body>

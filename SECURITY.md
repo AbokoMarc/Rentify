@@ -12,3 +12,14 @@ Le navigateur n'est jamais une source de vérité : `Auth.isAdmin()` (localStora
 
 ## Variables d'environnement
 `JWT_SECRET` (long, aléatoire), `ADMIN_EMAIL`, `ADMIN_PASSWORD` (16+ caractères), `CORS_ORIGIN` (optionnel).
+
+## Vérification d'identité
+- Code SMS : 6 chiffres, haché, valable 5 min, 3 essais, 3 SMS/heure/compte. Un numéro modifié doit être re-vérifié.
+- CNI : JPG/PNG/PDF (contenu vérifié, pas seulement l'extension), 2 Mo max, stockée en base — jamais dans un dossier public.
+  Seule la session admin vérifiée peut la voir ; chaque consultation est journalisée ; l'image est supprimée après approbation.
+
+## Messagerie
+Seuls les deux participants d'une conversation peuvent la lire ou y écrire (vérifié serveur à chaque requête) ; 1000 caractères max, 20 messages/min.
+
+## Sessions
+Visiteurs : 30 jours renouvelés à l'usage (plafond 180 jours). Admin : 8 h strictes. Un refus de permission (403) ne déconnecte jamais.

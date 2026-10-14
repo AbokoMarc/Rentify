@@ -65,8 +65,8 @@ export async function handleChat(req, res, urlPath) {
       await db.prepare('UPDATE chat_messages SET read_at = datetime(\'now\') WHERE conversation_id = ? AND sender_id != ? AND read_at IS NULL').run(conv.id, user.id);
       const messages = await db.prepare('SELECT id, sender_id, body, created_at FROM chat_messages WHERE conversation_id = ? AND id > ? ORDER BY id ASC LIMIT 200').all(conv.id, after);
       const room = await db.prepare('SELECT id, title FROM rooms WHERE id = ?').get(conv.room_id);
-      const other = await db.prepare('SELECT name FROM users WHERE id = ?').get(conv.guest_id === user.id ? conv.host_id : conv.guest_id);
-      return json(res, 200, { me: user.id, room, other_name: other?.name || '', messages });
+      const other = await db.prepare('SELECT name, kyc_verified FROM users WHERE id = ?').get(conv.guest_id === user.id ? conv.host_id : conv.guest_id);
+      return json(res, 200, { me: user.id, room, other_name: other?.name || '', other_kyc: !!other?.kyc_verified, messages });
     }
 
     if (req.method === 'POST') {

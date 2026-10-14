@@ -63,6 +63,8 @@ async function loadRoom() {
       qs('bw-terms-text').textContent = room.rental_terms;
     }
 
+    if (room.owner_kyc) qs('r-title').insertAdjacentHTML('afterend', '<div class="kyc-badge" style="margin:8px 0">🛡️ Hôte KYC vérifié</div>');
+    qs('bw-contact').classList.toggle('hidden', !room.has_host);
     qs('sr-price').innerHTML = money(room.price_per_night, { compact: true, period: room.pricing_period });
     if (room.latitude != null && room.longitude != null && typeof L !== 'undefined') { // carte facultative : si Leaflet ne charge pas, le reste de la page s'affiche quand même
       qs('r-map-section').classList.remove('hidden');

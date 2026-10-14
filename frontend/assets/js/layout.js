@@ -155,6 +155,7 @@ function renderAdminHeader(active = '') {
         ${link('/admin/admin-payments.html', 'Paiements', 'payments')}
         ${link('/admin/admin-inquiries.html', 'Demandes immo', 'inquiries')}
         ${link('/admin/admin-users.html', 'Clients', 'users')}
+        ${link('/admin/admin-kyc.html', 'Identités', 'kyc')}
         ${link('/admin/admin-settings.html', 'Paramètres', 'settings')}
       </nav>
       <div class="header-actions" style="position:relative">
@@ -177,6 +178,7 @@ function renderAdminHeader(active = '') {
         ${drawerLink('/admin/admin-payments.html', 'Paiements', 'payments')}
         ${drawerLink('/admin/admin-inquiries.html', 'Demandes immo', 'inquiries')}
         ${drawerLink('/admin/admin-users.html', 'Clients', 'users')}
+        ${drawerLink('/admin/admin-kyc.html', 'Identités', 'kyc')}
         ${drawerLink('/admin/admin-settings.html', 'Paramètres', 'settings')}
         <hr>
         <a href="/index.html">Voir le site public</a>

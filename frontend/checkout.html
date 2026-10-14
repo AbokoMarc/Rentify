@@ -31,18 +31,24 @@
 <div id="app-header"></div>
 
 <div class="container" style="padding:32px 24px 60px">
-  <h1 style="font-size:26px;margin-bottom:24px" data-i18n="finalize_payment_title">Finaliser le paiement</h1>
+  <h1 style="font-size:28px;margin-bottom:4px" data-i18n="finalize_payment_title">Paiement</h1>
+  <p style="color:var(--muted-text);margin-bottom:22px">Finalisez votre réservation</p>
   <div class="checkout-layout">
     <div>
-      <h3 style="font-size:16px;margin-bottom:14px" data-i18n="pay_mobile_money">Payer en Mobile Money</h3>
+      <h3 style="font-size:16px;margin-bottom:14px" data-i18n="pay_mobile_money">Méthode de paiement</h3>
 
       <div class="pay-method selected" data-method="mobile_money">
-        <div class="pay-method-head"><span class="pm-logos"><img src="/assets/img/mtn-momo-logo.png" alt="MTN Mobile Money"><img src="/assets/img/orange-money-logo.png" alt="Orange Money"></span><div><strong>MTN Mobile Money / Orange Money</strong><div style="font-size:13px;color:var(--muted-text)">Paiement automatique et sécurisé, confirmation immédiate</div></div></div>
+        <div class="op-buttons">
+          <button type="button" class="op-btn op-orange" data-op="orange"><img src="/assets/img/orange-money-logo.png" alt=""><span><strong>Orange Money</strong><small>Payer avec Orange Money</small></span></button>
+          <button type="button" class="op-btn op-mtn" data-op="mtn"><img src="/assets/img/mtn-momo-logo.png" alt=""><span><strong>MTN MoMo</strong><small>Payer avec MTN MoMo</small></span></button>
+        </div>
+        <div style="font-size:12px;color:var(--muted-text);margin-top:8px">🔒 Paiement automatique et sécurisé, confirmation immédiate</div>
         <div class="pay-method-body" style="display:block">
           <div id="mm-unavailable" class="hidden" style="font-size:13px;color:var(--clay);margin-bottom:10px">Le paiement Mobile Money automatique n'est pas encore configuré. Contacte l'admin sur WhatsApp pour payer autrement.</div>
           <div class="field" id="mm-fields">
             <label data-i18n="payment_phone_label">Numéro Mobile Money (MTN ou Orange)</label>
-            <input type="tel" id="mm-phone" placeholder="Ex : 6XXXXXXXX" inputmode="numeric">
+            <div class="phone-row"><span class="phone-prefix">🇨🇲 +237</span><input type="tel" id="mm-phone" placeholder="6XX XXX XXX" inputmode="numeric" autocomplete="tel-national"></div>
+            <div id="mm-op-hint" class="op-hint hidden"></div>
           </div>
           <p style="font-size:12px;color:var(--muted-text)">Tu recevras un push sur ton téléphone : valide avec ton code secret Mobile Money pour confirmer.</p>
         </div>

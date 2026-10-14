@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<style>html{visibility:hidden}</style>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vérifications d'identité — Admin Lokaya</title>
+<link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+<link rel="stylesheet" href="/assets/css/style.css">
+<style>
+  .kyc-card { background: white; border-radius: var(--radius-md); box-shadow: var(--shadow-card); padding: 18px; margin-bottom: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .kyc-doc { background: var(--sand-deep); border-radius: 14px; min-height: 220px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .kyc-doc img, .kyc-doc iframe { width: 100%; max-height: 380px; object-fit: contain; border: 0; height: 320px; }
+  @media (max-width: 760px) { .kyc-card { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="app-header"></div>
+<div class="container" style="padding:32px 24px 60px">
+  <h1 style="font-size:26px;margin-bottom:6px">Vérifications d'identité (CNI)</h1>
+  <p style="color:var(--muted-text);margin-bottom:24px">Chaque consultation de document est journalisée. Une fois la vérification approuvée, l'image est supprimée du serveur.</p>
+  <div id="kyc-list"><div class="skeleton" style="height:120px"></div></div>
+</div>
+<script src="/assets/js/icons.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/i18n.js"></script>
+<script src="/assets/js/theme.js"></script>
+<script src="/assets/js/payment-icons.js"></script>
+<script src="/assets/js/layout.js"></script>
+<script src="/assets/js/notifications.js"></script>
+<script>
+mountAdminLayout('kyc');
+async function loadKyc() {
+  const box = document.getElementById('kyc-list');
+  try {
+    const { requests } = await api('/admin/kyc');
+    if (!requests.length) { box.innerHTML = '<div class="empty-state"><i>✅</i>Aucune vérification en attente.</div>'; return; }
+    box.innerHTML = requests.map(r => `
+      <div class="kyc-card" data-id="${r.id}">
+        <div class="kyc-doc"><button class="btn btn-ghost btn-sm" data-act="view">Afficher le document</button></div>
+        <div>
+          <h3 style="margin-bottom:6px">${escapeHtml(r.name)}</h3>
+          <p style="font-size:14px;color:var(--muted-text)">${escapeHtml(r.email)}<br>${escapeHtml(r.phone || 'Pas de téléphone')} ${r.phone_verified ? '· ✓ vérifié par SMS' : '· non vérifié'}<br>Envoyé le ${escapeHtml(r.created_at)}</p>
+          <div class="field" style="margin-top:14px"><label>Motif (obligatoire si rejet)</label><input type="text" maxlength="200" class="kyc-reason"></div>
+          <div style="display:flex;gap:10px"><button class="btn btn-primary" data-act="approve">Approuver</button><button class="btn btn-danger" data-act="reject">Rejeter</button></div>
+        </div>
+      </div>`).join('');
+  } catch (err) { box.innerHTML = `<div class="empty-state">${escapeHtml(err.message)}</div>`; }
+}
+document.getElementById('kyc-list').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button[data-act]'); if (!btn) return;
+  const card = btn.closest('.kyc-card'), id = card.dataset.id;
+  if (btn.dataset.act === 'view') {
+    // Le document exige l'en-tête Authorization : on le récupère en fetch puis on l'affiche via une URL locale.
+    const r = await fetch(`/api/admin/kyc/${id}/document`, { headers: { Authorization: `Bearer ${Auth.getToken()}` } });
+    if (!r.ok) return showToast('Erreur', 'Document inaccessible.', 'warn');
+    const blob = await r.blob(), url = URL.createObjectURL(blob), box = card.querySelector('.kyc-doc');
+    box.innerHTML = blob.type === 'application/pdf' ? `<iframe src="${url}" sandbox></iframe>` : `<img src="${url}" alt="Document">`;
+    return;
+  }
+  const decision = btn.dataset.act === 'approve' ? 'approuve' : 'rejete', reason = card.querySelector('.kyc-reason').value;
+  try { await api(`/admin/kyc/${id}`, { method: 'PUT', body: { decision, reason } }); showToast('Fait', decision === 'approuve' ? 'Identité approuvée.' : 'Demande rejetée.'); loadKyc(); }
+  catch (err) { showToast('Erreur', err.message, 'warn'); }
+});
+loadKyc();
+</script>
+</body>
+</html>

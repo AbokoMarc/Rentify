@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Réservation confirmée — Lokaya</title>
+<link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#F26A1B">
+<link rel="stylesheet" href="/assets/css/style.css">
+<style>
+  .conf-wrap { max-width: 520px; margin: 0 auto; padding: 36px 20px 60px; }
+  .conf-check { width: 84px; height: 84px; border-radius: 50%; background: var(--forest); color: #fff; font-size: 44px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 10px 30px rgba(30,142,120,.35); }
+  .conf-code { background: #DDF3EC; border-radius: 18px; padding: 16px; text-align: center; margin: 22px 0; }
+  .conf-code small { display: block; color: var(--muted-text); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+  .conf-code strong { font-size: 30px; letter-spacing: .08em; color: var(--forest); font-family: var(--font-body); }
+  .conf-card { background: var(--white); border-radius: 22px; box-shadow: var(--shadow-card); padding: 18px; }
+  .conf-row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
+  .conf-row:last-child { border-bottom: none; font-weight: 800; font-size: 16px; }
+  .conf-actions { display: grid; gap: 10px; margin-top: 20px; }
+</style>
+</head>
+<body>
+<div id="app-header"></div>
+<div class="conf-wrap" id="conf">
+  <div class="skeleton" style="height:240px"></div>
+</div>
+<script src="/assets/js/icons.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/i18n.js"></script>
+<script src="/assets/js/theme.js"></script>
+<script src="/assets/js/calculators.js"></script>
+<script src="/assets/js/cookies.js"></script>
+<script src="/assets/js/layout.js"></script>
+<script src="/assets/js/notifications.js"></script>
+<script>
+if (!requireAuthOrRedirect()) { /* redirection en cours */ }
+mountLayout('');
+const fmtDate = (d) => new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+
+(async () => {
+  const box = document.getElementById('conf');
+  try {
+    const id = Number(new URLSearchParams(location.search).get('booking'));
+    const { bookings } = await api('/bookings/mine'); // uniquement MES réservations (contrôle serveur)
+    const b = bookings.find(x => x.id === id);
+    if (!b) { box.innerHTML = '<div class="empty-state">Réservation introuvable.</div>'; return; }
+    if (!['confirmee', 'terminee'].includes(b.status)) {
+      box.innerHTML = `<div class="empty-state"><i>⏳</i>Cette réservation n'est pas encore confirmée. <a href="/dashboard.html" class="btn btn-dark btn-sm" style="margin-top:12px">Mes réservations</a></div>`; return;
+    }
+    const total = (b.total_price || 0).toLocaleString('fr-FR').replace(/\u202f/g, ' ');
+    box.innerHTML = `
+      <div class="conf-check">✓</div>
+      <h1 style="text-align:center;font-size:30px">Réservation confirmée !</h1>
+      <p style="text-align:center;color:var(--muted-text);margin-top:6px">Votre réservation a été confirmée avec succès.</p>
+      <div class="conf-code"><small>Code de réservation</small><strong id="conf-code">${escapeHtml(b.code)}</strong>
+        <div><button class="btn btn-ghost btn-sm" id="copy-code" style="margin-top:8px">Copier le code</button></div></div>
+      <div class="conf-card">
+        <h3 style="font-size:17px;margin-bottom:6px">${escapeHtml(b.room?.title || '')}</h3>
+        <p style="font-size:13px;color:var(--muted-text);margin-bottom:8px">${escapeHtml([b.room?.address, b.room?.city].filter(Boolean).join(', '))}</p>
+        <div class="conf-row"><span>Arrivée</span><span>${escapeHtml(fmtDate(b.check_in))}</span></div>
+        <div class="conf-row"><span>Départ</span><span>${escapeHtml(fmtDate(b.check_out))}</span></div>
+        <div class="conf-row"><span>Voyageurs</span><span>${Number(b.adults) + Number(b.children || 0)}</span></div>
+        <div class="conf-row"><span>Total payé</span><span>${escapeHtml(total)} FCFA</span></div>
+      </div>
+      <div class="conf-actions">
+        <a class="btn btn-primary btn-block" href="/recu.html?booking=${b.id}">📄 Télécharger la facture (PDF)</a>
+        ${b.room?.owner_id ? '<button class="btn btn-dark btn-block" id="contact-host">💬 Contacter l\'hôte</button>' : ''}
+        <a class="btn btn-ghost btn-block" href="/dashboard.html">Mes réservations</a>
+      </div>`;
+    document.getElementById('copy-code').addEventListener('click', async () => { try { await navigator.clipboard.writeText(b.code); showToast('Code copié', b.code); } catch { /* presse-papiers indisponible */ } });
+    const ch = document.getElementById('contact-host');
+    if (ch) ch.addEventListener('click', async () => {
+      try { const { id: cid } = await api('/conversations', { method: 'POST', body: { room_id: b.room.id } }); location.href = `/messages.html?c=${cid}`; }
+      catch (err) { showToast('Impossible', err.message, 'warn'); }
+    });
+  } catch (err) { box.innerHTML = `<div class="empty-state">${escapeHtml(err.message)}</div>`; }
+})();
+</script>
+</body>
+</html>
