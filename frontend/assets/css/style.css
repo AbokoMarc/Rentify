@@ -498,9 +498,10 @@ h1, h2, h3 { letter-spacing: -0.01em; }
     display: flex; position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 80; gap: 6px; padding: 8px;
     background: rgba(255,255,255,0.96); backdrop-filter: blur(10px); border-radius: 26px; box-shadow: var(--shadow-pop);
   }
-  .bottom-nav a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  .bottom-nav a, .bottom-nav button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
     padding: 9px 4px; border-radius: 18px; font-size: 11px; font-weight: 600; color: var(--ink-light); background: #F4EFE8; }
-  .bottom-nav a svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .bottom-nav button { border: none; font-family: inherit; }
+  .bottom-nav a svg, .bottom-nav button svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .bottom-nav a.active { background: var(--gold); color: #fff; }
   .whatsapp-float { bottom: 100px; }
   .hero { padding: 28px 0 40px; }
@@ -746,3 +747,7 @@ html, body { overflow-x: clip; max-width: 100%; }
   .stat-card .stat-value { font-size: clamp(18px, 5.4vw, 26px) !important; line-height: 1.15; overflow-wrap: anywhere; }
   .stat-card .stat-label { font-size: 12px; }
 }
+
+/* Menu ☰ : carte du compte en tête */
+.mobile-nav-drawer .drawer-user { display: flex; align-items: center; gap: 12px; background: var(--sand); margin-bottom: 8px; }
+.mobile-nav-drawer .drawer-user small { display: block; font-weight: 500; color: var(--muted-text); font-size: 12px; }

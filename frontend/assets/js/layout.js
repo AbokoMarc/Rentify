@@ -55,19 +55,19 @@ function renderHeader(active = '') {
     <a href="/signup.html" class="btn btn-dark btn-sm" data-i18n="signup">S'inscrire</a>
   `;
 
+  // Le menu ☰ complète la barre du bas (Accueil / Explorer / Favoris / Messages / Profil) : il ne répète PAS ces entrées,
+  // il regroupe tout le reste (immobilier, vendeur, aide, infos, contact, compte).
   const drawerLinks = `
-    <a href="/index.html" class="${active === 'home' ? 'active' : ''}" data-i18n="nav_home">Accueil</a>
-    <a href="/search.html" class="${active === 'search' ? 'active' : ''}" data-i18n="nav_explore">Explorer</a>
+    ${loggedIn ? `<a href="/dashboard.html" class="drawer-user"><span class="avatar">${escapeHtml((user.name || '?').slice(0, 1).toUpperCase())}</span><span><strong>${escapeHtml(user.name || '')}</strong><small>Voir mon profil</small></span></a>` : ''}
     <a href="/immobilier.html" class="${active === 'immobilier' ? 'active' : ''}" data-i18n="nav_immobilier">Acheter / Louer un bien</a>
-    ${loggedIn ? `<a href="/dashboard.html" class="${active === 'dashboard' ? 'active' : ''}" data-i18n="nav_bookings">Mes réservations</a>` : ''}
-    ${loggedIn ? `<a href="/dashboard.html#favoris" data-i18n="nav_favorites">Favoris</a>` : ''}
-    ${loggedIn && isSeller ? `<a href="/vendeur.html" class="${active === 'vendeur' ? 'active' : ''}" data-i18n="nav_seller_space">Espace vendeur</a>` : ''}
-    ${loggedIn && !isSeller ? `<a href="/vendeur.html" data-i18n="nav_become_seller">Devenir vendeur</a>` : ''}
+    ${loggedIn && isSeller ? `<a href="/vendeur.html" class="${active === 'vendeur' ? 'active' : ''}" data-i18n="nav_seller_space">Espace vendeur</a>` : `<a href="/vendeur.html" data-i18n="nav_become_seller">Devenir vendeur</a>`}
+    <a href="/aide.html">Centre d'aide</a>
+    <a href="/apropos.html">À propos de Lokaya</a>
+    <a href="/annulation.html">Conditions d'annulation</a>
     <a href="${whatsappUrl()}" target="_blank" rel="noopener" data-i18n="contact_whatsapp">Discuter avec l'admin sur WhatsApp</a>
     <hr>
     ${loggedIn
-      ? `<a href="/dashboard.html" data-i18n="my_profile">Mon profil</a>
-         <button class="drawer-link" id="drawer-logout-btn" data-i18n="logout">Déconnexion</button>`
+      ? `<button class="drawer-link" id="drawer-logout-btn" data-i18n="logout">Déconnexion</button>`
       : `<a href="/login.html" data-i18n="login">Se connecter</a><a href="/signup.html" data-i18n="signup">S'inscrire</a>`}
   `;
 
@@ -189,12 +189,19 @@ function renderAdminHeader(active = '') {
 }
 
 function bindMobileNav() {
+  if (window.__navBound) return; window.__navBound = true;
+  const drawer = () => qs('mobile-nav-drawer');
+  const open = () => { drawer()?.classList.remove('hidden'); document.body.style.overflow = 'hidden'; };
+  const close = () => { drawer()?.classList.add('hidden'); document.body.style.overflow = ''; };
   document.addEventListener('click', (e) => {
-    if (e.target && (e.target.id === 'mobile-nav-btn')) qs('mobile-nav-drawer')?.classList.remove('hidden');
-    if (e.target && (e.target.id === 'mobile-nav-close')) qs('mobile-nav-drawer')?.classList.add('hidden');
-    if (e.target && e.target.id === 'mobile-nav-drawer') qs('mobile-nav-drawer')?.classList.add('hidden');
-    if (e.target && e.target.id === 'drawer-logout-btn') Auth.logout();
+    const t = e.target; if (!t) return;
+    if (t.closest && t.closest('#mobile-nav-btn')) return open();
+    if ((t.closest && t.closest('#mobile-nav-close')) || t.id === 'mobile-nav-drawer') return close();
+    if (t.closest && t.closest('#mobile-nav-drawer a')) close();          // un clic sur un lien referme le menu
+    if (t.id === 'drawer-logout-btn') { close(); Auth.logout(); }
+    if (t.closest && t.closest('#bn-more')) open();                      // bouton « Plus » de la barre du bas admin
   });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
 }
 
 // Abonne le navigateur aux notifications système (Web Push), si l'utilisateur est connecté
@@ -227,6 +234,24 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
 }
 
+function renderAdminBottomNav(active = '') {
+  const ic = {
+    dash: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
+    rooms: '<svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+    bookings: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+    payments: '<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 11h20"/></svg>',
+    more: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>',
+  };
+  const item = (href, key, label) => `<a href="${href}" class="${active === key ? 'active' : ''}">${ic[key]}<span>${label}</span></a>`;
+  return `<nav class="bottom-nav admin-bottom-nav" aria-label="Navigation admin">
+    ${item('/admin/admin-dashboard.html', 'dash', 'Tableau')}
+    ${item('/admin/admin-rooms.html', 'rooms', 'Logements')}
+    ${item('/admin/admin-bookings.html', 'bookings', 'Réservations')}
+    ${item('/admin/admin-payments.html', 'payments', 'Paiements')}
+    <button type="button" id="bn-more">${ic.more}<span>Plus</span></button>
+  </nav>`;
+}
+
 function mountAdminLayout(active = '') {
   if (!requireAdminOrRedirect()) return;
   // La page reste MASQUÉE (voir <style>html{visibility:hidden}</style> dans chaque page admin) tant que le
@@ -239,6 +264,7 @@ function mountAdminLayout(active = '') {
   });
   const headerMount = document.getElementById('app-header');
   if (headerMount) headerMount.outerHTML = renderAdminHeader(active);
+  if (!document.querySelector('.admin-bottom-nav')) document.body.insertAdjacentHTML('beforeend', renderAdminBottomNav(active));
   bindMobileNav();
   document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'logout-btn') Auth.logout();
