@@ -141,8 +141,10 @@ function renderFooter() {
 
 function renderAdminHeader(active = '') {
   const user = Auth.getUser();
-  const link = (href, label, key) => `<a href="${href}" style="${active === key ? 'color:var(--ink-text);font-weight:700' : ''}">${label}</a>`;
-  const drawerLink = (href, label, key) => `<a href="${href}" class="${active === key ? 'active' : ''}">${label}</a>`;
+  const CNT = ['rooms', 'sellers', 'payments', 'inquiries', 'kyc']; // entrées qui peuvent afficher une pastille de tâches en attente
+  const cnt = (key) => (CNT.includes(key) ? `<span class="cnt" data-cnt="${key}"></span>` : '');
+  const link = (href, label, key) => `<a href="${href}" style="${active === key ? 'color:var(--ink-text);font-weight:700' : ''}">${label}${cnt(key)}</a>`;
+  const drawerLink = (href, label, key) => `<a href="${href}" class="${active === key ? 'active' : ''}">${label}${cnt(key)}</a>`;
   return `
   <header class="site-header">
     <div class="container">
@@ -191,8 +193,8 @@ function renderAdminHeader(active = '') {
 function bindMobileNav() {
   if (window.__navBound) return; window.__navBound = true;
   const drawer = () => qs('mobile-nav-drawer');
-  const open = () => { drawer()?.classList.remove('hidden'); document.body.style.overflow = 'hidden'; };
-  const close = () => { drawer()?.classList.add('hidden'); document.body.style.overflow = ''; };
+  const open = () => { drawer()?.classList.remove('hidden'); document.body.style.overflow = 'hidden'; document.body.classList.add('nav-open'); };
+  const close = () => { drawer()?.classList.add('hidden'); document.body.style.overflow = ''; document.body.classList.remove('nav-open'); };
   document.addEventListener('click', (e) => {
     const t = e.target; if (!t) return;
     if (t.closest && t.closest('#mobile-nav-btn')) return open();
@@ -242,14 +244,25 @@ function renderAdminBottomNav(active = '') {
     payments: '<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 11h20"/></svg>',
     more: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>',
   };
-  const item = (href, key, label) => `<a href="${href}" class="${active === key ? 'active' : ''}">${ic[key]}<span>${label}</span></a>`;
+  const item = (href, key, label) => `<a href="${href}" class="${active === key ? 'active' : ''}">${ic[key]}<span>${label}</span>${['rooms', 'payments'].includes(key) ? `<b class="cnt" data-cnt="${key}"></b>` : ''}</a>`;
   return `<nav class="bottom-nav admin-bottom-nav" aria-label="Navigation admin">
     ${item('/admin/admin-dashboard.html', 'dash', 'Tableau')}
     ${item('/admin/admin-rooms.html', 'rooms', 'Logements')}
     ${item('/admin/admin-bookings.html', 'bookings', 'Réservations')}
     ${item('/admin/admin-payments.html', 'payments', 'Paiements')}
-    <button type="button" id="bn-more">${ic.more}<span>Plus</span></button>
+    <button type="button" id="bn-more">${ic.more}<span>Plus</span><b class="cnt" data-cnt-sum="sellers,kyc,inquiries"></b></button>
   </nav>`;
+}
+
+// Pastilles « à traiter » : annonces à valider, vendeurs, identités, paiements à vérifier, nouvelles demandes.
+async function refreshAdminCounts() {
+  try {
+    const c = await api('/admin/pending-counts');
+    document.querySelectorAll('[data-cnt]').forEach(el => { const v = Number(c[el.dataset.cnt] || 0); el.textContent = v > 99 ? '99+' : (v || ''); });
+    document.querySelectorAll('[data-cnt-sum]').forEach(el => {
+      const v = el.dataset.cntSum.split(',').reduce((a, k) => a + Number(c[k] || 0), 0); el.textContent = v > 99 ? '99+' : (v || '');
+    });
+  } catch { /* les pastilles sont facultatives */ }
 }
 
 function mountAdminLayout(active = '') {
@@ -257,7 +270,7 @@ function mountAdminLayout(active = '') {
   // La page reste MASQUÉE (voir <style>html{visibility:hidden}</style> dans chaque page admin) tant que le
   // serveur n'a pas confirmé la session admin. Un rôle bricolé dans le localStorage n'affiche donc rien.
   verifyAdminSession().then((ok) => {
-    if (ok) { document.documentElement.style.visibility = 'visible'; return; }
+    if (ok) { document.documentElement.style.visibility = 'visible'; refreshAdminCounts(); setInterval(refreshAdminCounts, 60000); window.addEventListener('lokaya:notification', refreshAdminCounts); return; }
     document.body.innerHTML = '';
     Auth.clearToken(); Auth.clearUser();
     window.location.replace('/admin/login.html');

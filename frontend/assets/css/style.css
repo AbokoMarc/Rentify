@@ -751,3 +751,30 @@ html, body { overflow-x: clip; max-width: 100%; }
 /* Menu ☰ : carte du compte en tête */
 .mobile-nav-drawer .drawer-user { display: flex; align-items: center; gap: 12px; background: var(--sand); margin-bottom: 8px; }
 .mobile-nav-drawer .drawer-user small { display: block; font-weight: 500; color: var(--muted-text); font-size: 12px; }
+
+/* Pastilles « à traiter » (menu admin) */
+.cnt { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px; border-radius: 9px;
+  background: var(--clay); color: #fff; font-size: 11px; font-weight: 800; line-height: 1; font-style: normal; vertical-align: middle; }
+.cnt:empty { display: none; }
+.bottom-nav a, .bottom-nav button { position: relative; }
+.bottom-nav .cnt { position: absolute; top: 3px; right: 10px; margin: 0; }
+
+/* Menu ☰ : carte flottante arrondie (ne descend plus jusqu'en bas, ne passe plus sous la barre de boutons) */
+@media (max-width: 900px) {
+  .mobile-nav-drawer .drawer-panel {
+    top: 12px; right: 12px; bottom: 12px; left: auto; width: min(320px, calc(100vw - 24px));
+    border-radius: 26px; padding: 14px; gap: 2px;
+  }
+  .mobile-nav-drawer .drawer-close { margin-bottom: 6px; }
+  .mobile-nav-drawer a, .mobile-nav-drawer button.drawer-link { padding: 12px 14px; border-radius: 14px; font-size: 15px; }
+  .mobile-nav-drawer a:not(.drawer-user):hover, .mobile-nav-drawer a:not(.drawer-user):active { background: var(--sand); }
+}
+@media (max-width: 860px) {
+  /* la barre du bas reste visible et cliquable : la carte s'arrête juste au-dessus */
+  .mobile-nav-drawer .drawer-panel { bottom: 104px; }
+}
+
+/* Menu ouvert : le bouton WhatsApp flottant se cache, la croix et les entrées ne s'écrasent plus */
+body.nav-open .whatsapp-float { display: none; }
+.mobile-nav-drawer .drawer-close, .mobile-nav-drawer a, .mobile-nav-drawer button.drawer-link { flex-shrink: 0; }
+.mobile-nav-drawer .drawer-close { width: 40px; height: 40px; align-self: flex-end; }

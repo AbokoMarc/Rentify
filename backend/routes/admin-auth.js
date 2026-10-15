@@ -77,6 +77,20 @@ export async function handleAdminAuth(req, res, urlPath) {
     return json(res, 200, { ok: true, user: { id: admin.id, name: admin.name, role: 'admin' } });
   }
 
+  // GET /api/admin/pending-counts — nombre d'éléments qui attendent une action de l'admin (pastilles du menu)
+  if (urlPath === '/api/admin/pending-counts' && req.method === 'GET') {
+    const admin = await requireAdmin(req, res);
+    if (!admin) return;
+    const n = async (sql) => (await db.prepare(sql).get()).n;
+    return json(res, 200, {
+      rooms: await n(`SELECT COUNT(*) AS n FROM rooms WHERE approval_status = 'en_attente'`),
+      sellers: await n(`SELECT COUNT(*) AS n FROM users WHERE vendeur_statut = 'en_attente'`),
+      kyc: await n(`SELECT COUNT(*) AS n FROM kyc_requests WHERE status = 'en_attente'`),
+      payments: await n(`SELECT COUNT(*) AS n FROM payments WHERE status = 'en_attente'`),
+      inquiries: await n(`SELECT COUNT(*) AS n FROM property_inquiries WHERE status = 'nouveau'`),
+    });
+  }
+
   // ---------- Gestion de la 2FA (session admin requise) ----------
   if (urlPath.startsWith('/api/admin/2fa/')) {
     const admin = await requireAdmin(req, res);
