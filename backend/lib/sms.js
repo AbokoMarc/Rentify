@@ -26,3 +26,8 @@ export async function sendSms(to, text) {
   }
   throw new Error('SMS non configuré');
 }
+
+// Vrai si un envoi de SMS est possible (fournisseur configuré, ou mode développement explicite).
+export function isSmsAvailable() {
+  return isSmsConfigured() || (process.env.SMS_DEV_LOG === '1' && process.env.NODE_ENV !== 'production');
+}

@@ -213,7 +213,9 @@ qs('resend-verify-btn').addEventListener('click', async () => {
 async function refreshVerif() {
   try {
     const k = await api('/kyc/me');
-    qs('verif-card').classList.toggle('hidden', k.kyc_verified && k.phone_verified);
+    // Sans fournisseur de SMS, l'étape téléphone n'est pas proposée (elle échouerait) : seule la CNI reste demandée.
+    qs('vs-phone').classList.toggle('hidden', !k.sms_available && !k.phone_verified);
+    qs('verif-card').classList.toggle('hidden', k.kyc_verified && (k.phone_verified || !k.sms_available));
     qs('vs-phone-act').classList.toggle('hidden', k.phone_verified);
     qs('vs-phone-sub').textContent = k.phone_verified ? `✓ ${k.phone} vérifié` : 'Confirme ton numéro par SMS.';
     const r = k.request;

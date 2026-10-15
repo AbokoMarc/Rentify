@@ -6,7 +6,7 @@ import crypto from 'node:crypto';
 import { db } from '../db.js';
 import { json, parseBody, notFound } from '../lib/http.js';
 import { requireAuth, requireAdmin } from '../lib/auth.js';
-import { sendSms } from '../lib/sms.js';
+import { sendSms, isSmsAvailable } from '../lib/sms.js';
 import { hit, tooMany, clientIp } from '../lib/security.js';
 import { notifyClient } from '../lib/notify.js';
 
@@ -68,7 +68,7 @@ export async function handleKyc(req, res, urlPath) {
     if (urlPath === '/api/kyc/me' && req.method === 'GET') {
       const last = await db.prepare('SELECT status, reject_reason, created_at FROM kyc_requests WHERE user_id = ? ORDER BY id DESC LIMIT 1').get(user.id);
       const u = await db.prepare('SELECT phone, phone_verified, kyc_verified FROM users WHERE id = ?').get(user.id);
-      return json(res, 200, { kyc_verified: !!u.kyc_verified, phone_verified: !!u.phone_verified, phone: u.phone, request: last || null });
+      return json(res, 200, { sms_available: isSmsAvailable(), kyc_verified: !!u.kyc_verified, phone_verified: !!u.phone_verified, phone: u.phone, request: last || null });
     }
     if (urlPath === '/api/kyc' && req.method === 'POST') {
       const rl = hit(`kyc:${user.id}`, 5, 24 * 60 * 60 * 1000);

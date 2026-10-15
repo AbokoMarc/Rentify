@@ -407,7 +407,7 @@ h1, h2, h3 { letter-spacing: -0.01em; }
 .btn-danger { background: #FBE4DE; }
 
 /* En-tête : crème translucide, logo en serif */
-.site-header { background: rgba(247,241,233,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.site-header { background: var(--sand); border-bottom: 1px solid var(--line); } /* pas de backdrop-filter : il piégeait le menu mobile (position:fixed) dans la hauteur de l'en-tête */
 .site-header .container { height: 68px; }
 .brand { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em; }
 .main-nav a[style*="font-weight:700"]::after { background: var(--gold); }
@@ -737,4 +737,12 @@ html, body { overflow-x: clip; max-width: 100%; }
   #cities-grid .city-card { display: grid; grid-template-columns: 96px 1fr; align-items: center; }
   #cities-grid .city-card .city-img { height: 84px; margin: 8px; border-radius: 14px; }
   #cities-grid .city-card .city-body { padding: 8px 12px 8px 0; }
+}
+
+/* Tableau de bord admin sur mobile : 2 colonnes, chiffres réduits (les <style> des pages passent après ce fichier → !important) */
+@media (max-width: 860px) {
+  .stat-grid { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+  .stat-card { min-width: 0; padding: 14px !important; }
+  .stat-card .stat-value { font-size: clamp(18px, 5.4vw, 26px) !important; line-height: 1.15; overflow-wrap: anywhere; }
+  .stat-card .stat-label { font-size: 12px; }
 }
