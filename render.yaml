@@ -36,6 +36,8 @@ services:
         sync: false
       - key: EMAIL_FROM
         sync: false
+      - key: TOTP_ENCRYPTION_KEY
+        generateValue: true   # chiffre les secrets 2FA ; ne JAMAIS la changer après avoir activé la 2FA
       - key: PUBLIC_SITE_URL
         sync: false   # ex : https://ton-site.vercel.app (sert aux liens des emails, anti-falsification)
       - key: SMS_PROVIDER

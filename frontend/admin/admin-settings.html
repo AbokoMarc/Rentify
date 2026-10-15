@@ -32,6 +32,37 @@
     </form>
   </div>
 </div>
+<div class="container" style="padding:0 24px 60px;max-width:600px">
+  <div style="background:white;border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:24px" id="twofa-card">
+    <h3 style="margin-bottom:6px">Double authentification (2FA)</h3>
+    <p id="twofa-state" style="color:var(--muted-text);font-size:14px;margin-bottom:14px">Chargement…</p>
+    <div id="twofa-off" class="hidden">
+      <p style="font-size:14px;margin-bottom:12px">Ajoute une seconde étape à la connexion : un code à 6 chiffres généré par une application (Google Authenticator, Microsoft Authenticator, Authy). Même si ton mot de passe fuite, personne ne pourra se connecter.</p>
+      <button class="btn btn-primary" id="twofa-start">Activer la double authentification</button>
+    </div>
+    <div id="twofa-setup" class="hidden">
+      <ol style="font-size:14px;line-height:1.8;padding-left:18px;margin-bottom:12px">
+        <li>Dans ton application d'authentification, choisis « Ajouter un compte » puis « Saisir une clé ».</li>
+        <li>Saisis cette clé : <code id="twofa-secret" style="font-weight:800;letter-spacing:.08em;word-break:break-all"></code></li>
+        <li>Sur téléphone, tu peux aussi <a id="twofa-uri" href="#">ouvrir directement l'application</a>.</li>
+        <li>Saisis ci-dessous le code à 6 chiffres affiché.</li>
+      </ol>
+      <div class="field"><label>Code à 6 chiffres</label><input type="text" id="twofa-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></div>
+      <button class="btn btn-primary" id="twofa-enable">Confirmer et activer</button>
+    </div>
+    <div id="twofa-codes" class="hidden">
+      <p style="font-size:14px;color:var(--clay);font-weight:700;margin-bottom:8px">⚠️ Note ces codes de secours MAINTENANT : ils ne seront plus jamais affichés. Chacun ne sert qu'une fois si tu perds ton téléphone.</p>
+      <pre id="twofa-codes-list" style="background:#F1ECE4;border-radius:12px;padding:14px;font-size:15px;line-height:1.8;user-select:all"></pre>
+    </div>
+    <div id="twofa-on" class="hidden">
+      <p style="font-size:14px;margin-bottom:12px">Pour la désactiver, saisis ton mot de passe et un code actuel.</p>
+      <div class="field"><label>Mot de passe</label><input type="password" id="twofa-pwd" autocomplete="current-password"></div>
+      <div class="field"><label>Code à 6 chiffres</label><input type="text" id="twofa-off-code" inputmode="numeric" maxlength="6"></div>
+      <button class="btn btn-danger" id="twofa-disable">Désactiver</button>
+    </div>
+    <div id="twofa-err" style="color:var(--clay);font-size:13px;margin-top:10px"></div>
+  </div>
+</div>
 <script src="/assets/js/icons.js"></script>
 <script src="/assets/js/api.js"></script>
 <script src="/assets/js/i18n.js"></script>
@@ -58,6 +89,35 @@ qs('pwd-form').addEventListener('submit', async (e) => {
     errEl.textContent = err.message; errEl.style.display = 'block';
   } finally { btn.disabled = false; btn.textContent = 'Mettre à jour le mot de passe'; }
 });
+
+// ---------- Double authentification ----------
+const $2 = (id) => document.getElementById(id);
+function show2fa(state) { ['twofa-off', 'twofa-setup', 'twofa-on'].forEach(i => $2(i).classList.toggle('hidden', i !== state)); }
+async function load2fa() {
+  try {
+    const st = await api('/admin/2fa/status');
+    $2('twofa-state').textContent = st.enabled ? `✅ Active — ${st.recovery_left} code(s) de secours restant(s).` : '❌ Non activée — fortement recommandé pour un compte administrateur.';
+    show2fa(st.enabled ? 'twofa-on' : 'twofa-off');
+  } catch (e) { $2('twofa-err').textContent = e.message; }
+}
+$2('twofa-start').addEventListener('click', async () => {
+  $2('twofa-err').textContent = '';
+  try { const r = await api('/admin/2fa/setup', { method: 'POST' }); $2('twofa-secret').textContent = r.secret; $2('twofa-uri').href = r.uri; show2fa('twofa-setup'); }
+  catch (e) { $2('twofa-err').textContent = e.message; }
+});
+$2('twofa-enable').addEventListener('click', async () => {
+  $2('twofa-err').textContent = '';
+  try {
+    const r = await api('/admin/2fa/enable', { method: 'POST', body: { code: $2('twofa-code').value } });
+    $2('twofa-codes-list').textContent = r.recovery_codes.join('\n'); $2('twofa-codes').classList.remove('hidden'); load2fa();
+  } catch (e) { $2('twofa-err').textContent = e.message; }
+});
+$2('twofa-disable').addEventListener('click', async () => {
+  $2('twofa-err').textContent = '';
+  try { await api('/admin/2fa/disable', { method: 'POST', body: { password: $2('twofa-pwd').value, code: $2('twofa-off-code').value } }); $2('twofa-codes').classList.add('hidden'); load2fa(); }
+  catch (e) { $2('twofa-err').textContent = e.message; }
+});
+load2fa();
 </script>
 </body>
 </html>

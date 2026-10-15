@@ -23,3 +23,7 @@ Seuls les deux participants d'une conversation peuvent la lire ou y écrire (vé
 
 ## Sessions
 Visiteurs : 30 jours renouvelés à l'usage (plafond 180 jours). Admin : 8 h strictes. Un refus de permission (403) ne déconnecte jamais.
+
+## Double authentification admin (TOTP)
+Activation dans Admin > Paramètres. Code à 6 chiffres (30 s) via Google/Microsoft Authenticator ou Authy.
+Un code ne sert qu'une fois ; 8 codes de secours à usage unique ; secret chiffré en base (AES-256-GCM) ; les échecs comptent dans le verrouillage.

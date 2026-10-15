@@ -255,6 +255,8 @@ await db.exec(`
 await db.exec(`CREATE TABLE IF NOT EXISTS admin_login_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT, ip TEXT, success INTEGER NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now')));`);
 
+await db.exec(`CREATE TABLE IF NOT EXISTS admin_recovery_codes (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, code_hash TEXT NOT NULL, used INTEGER NOT NULL DEFAULT 0);`);
+
 await db.exec(`CREATE TABLE IF NOT EXISTS password_resets (
   id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, token_hash TEXT NOT NULL UNIQUE,
   expires_at INTEGER NOT NULL, used INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (datetime('now')));`);
@@ -294,6 +296,9 @@ CREATE INDEX IF NOT EXISTS idx_kyc_user ON kyc_requests(user_id, id);
 `);
 
 const MIGRATIONS = [
+  `ALTER TABLE users ADD COLUMN totp_secret TEXT`,
+  `ALTER TABLE users ADD COLUMN totp_enabled INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE users ADD COLUMN totp_last_step INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE reviews ADD COLUMN rating_location INTEGER`,
   `ALTER TABLE reviews ADD COLUMN rating_comm INTEGER`,
   `ALTER TABLE reviews ADD COLUMN rating_value INTEGER`,

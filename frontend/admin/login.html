@@ -28,6 +28,10 @@
         <label>Mot de passe</label>
         <input type="password" id="password" required autocomplete="current-password">
       </div>
+      <div class="field hidden" id="code-field">
+        <label>Code de double authentification</label>
+        <input type="text" id="code" inputmode="numeric" autocomplete="one-time-code" placeholder="6 chiffres (ou code de secours)">
+      </div>
       <div id="login-error" style="color:var(--clay);font-size:13px;margin-bottom:12px;display:none"></div>
       <button type="submit" class="btn btn-primary btn-block" id="login-submit">Se connecter</button>
     </form>
@@ -47,10 +51,15 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
   errEl.style.display = 'none';
   btn.disabled = true; btn.textContent = 'Connexion…';
   try {
-    const { token, user } = await api('/admin/login', {
+    const res = await api('/admin/login', {
       method: 'POST', auth: false,
-      body: { email: document.getElementById('email').value, password: document.getElementById('password').value },
+      body: { email: document.getElementById('email').value, password: document.getElementById('password').value, code: document.getElementById('code').value || undefined },
     });
+    if (res.need_2fa) { // mot de passe correct, il reste la 2e étape
+      document.getElementById('code-field').classList.remove('hidden'); document.getElementById('code').focus();
+      btn.disabled = false; btn.textContent = 'Se connecter'; return;
+    }
+    const { token, user } = res;
     Auth.setToken(token); Auth.setUser(user);
     window.location.href = '/admin/admin-dashboard.html';
   } catch (err) {

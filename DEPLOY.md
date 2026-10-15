@@ -8,6 +8,7 @@
    - (optionnel) RESEND_API_KEY + EMAIL_FROM : emails de réinitialisation du mot de passe.
    - (optionnel) SMS_PROVIDER=twilio, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM : codes SMS.
    - (optionnel) CAMPAY_* : paiement Mobile Money. Teste en CAMPAY_MODE=demo avant « live ».
+   - TOTP_ENCRYPTION_KEY : une longue valeur aléatoire, définie UNE FOIS avant d'activer la 2FA et jamais changée ensuite.
 2. Ne mets PAS CORS_ORIGIN sauf si un AUTRE site doit appeler ton API.
 
 ## 2. Déployer
